@@ -225,7 +225,7 @@ const StatsPage: React.FC<StatsPageProps> = ({
                     return (
                         <div
                             key={index}
-                            className={`${card.bgColor} rounded-2xl p-4 border border-white/60`}
+                            className="glass-card rounded-2xl p-4 ring-1 ring-white/10"
                         >
                             <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${card.color} flex items-center justify-center mb-2`}>
                                 <Icon size={18} className="text-white" />
@@ -239,7 +239,7 @@ const StatsPage: React.FC<StatsPageProps> = ({
             </div>
 
             {/* Heatmap Card */}
-            <div className="bg-white rounded-2xl p-5 border border-slate-100">
+            <div className="glass-card rounded-2xl p-5 ring-1 ring-white/10">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="font-bold text-slate-800">Activity Heatmap</h3>
                     <div className="flex items-center gap-1.5 text-xs text-slate-500">
@@ -317,7 +317,7 @@ const StatsPage: React.FC<StatsPageProps> = ({
             </div>
 
             {/* Weekly Breakdown */}
-            <div className="bg-white rounded-2xl p-5 border border-slate-100">
+            <div className="glass-card rounded-2xl p-5 ring-1 ring-white/10">
                 <h3 className="font-bold text-slate-800 mb-4">Weekly Overview</h3>
                 <div className="space-y-3">
                     {weekDays.map((day, index) => {
@@ -348,7 +348,7 @@ const StatsPage: React.FC<StatsPageProps> = ({
             </div>
 
             {/* Best Day Highlight */}
-            <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-5 border border-amber-100">
+            <div className="glass-card glass-card-amber rounded-2xl p-5 ring-1 ring-white/10">
                 <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center">
                         <Target size={24} className="text-white" />

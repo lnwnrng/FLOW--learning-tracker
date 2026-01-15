@@ -85,7 +85,7 @@ const TaskList: React.FC<TaskListProps> = ({
       {/* Task List */}
       <div className="space-y-3">
         {sortedTasks.length === 0 ? (
-          <div className="py-16 text-center rounded-2xl bg-gradient-to-b from-slate-50/80 to-white border border-dashed border-slate-200">
+          <div className="py-16 text-center rounded-2xl glass-card ring-1 ring-white/10">
             <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm border border-slate-100">
               <Calendar size={24} className="text-slate-400" />
             </div>
@@ -100,9 +100,8 @@ const TaskList: React.FC<TaskListProps> = ({
               <div
                 key={task.id}
                 className={`
-                  p-4 rounded-2xl border-2 transition-all duration-200
-                  ${colors.bg} ${colors.border}
-                  ${task.completed ? 'opacity-50' : 'hover:shadow-md hover:shadow-slate-200/50'}
+                  p-4 rounded-2xl glass-card ring-1 ring-white/10 transition-all duration-200
+                  ${task.completed ? 'opacity-50' : 'hover:shadow-lg'}
                 `}
               >
                 <div className="flex items-start justify-between gap-3">

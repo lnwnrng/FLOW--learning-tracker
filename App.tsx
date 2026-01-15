@@ -148,7 +148,18 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 selection:bg-violet-500 selection:text-white">
+    <div
+      className="min-h-screen text-slate-900 selection:bg-violet-500 selection:text-white relative"
+      style={{
+        background: `
+          radial-gradient(ellipse 80% 50% at 50% -20%, rgba(120, 119, 198, 0.15), transparent),
+          radial-gradient(ellipse 60% 40% at 100% 0%, rgba(249, 168, 212, 0.12), transparent),
+          radial-gradient(ellipse 50% 50% at 0% 100%, rgba(56, 189, 248, 0.10), transparent),
+          radial-gradient(ellipse 40% 40% at 80% 80%, rgba(167, 139, 250, 0.08), transparent),
+          #F8FAFC
+        `
+      }}
+    >
 
       <main className="
         container mx-auto px-5 py-6 pb-32 

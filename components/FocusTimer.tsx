@@ -84,7 +84,7 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
     return (
         <div className="animate-fade-in min-h-[70vh] flex flex-col">
             {/* Today's Summary */}
-            <div className="bg-gradient-to-r from-sky-50 to-blue-50 rounded-2xl p-4 border border-sky-100 mb-6">
+            <div className="glass-card glass-card-sky rounded-2xl p-4 mb-6 ring-1 ring-white/10">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
@@ -160,7 +160,7 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
 
                 {/* Selected Task */}
                 {selectedTask && (
-                    <div className="mt-6 px-4 py-2 bg-white rounded-xl border border-slate-200 flex items-center gap-2 max-w-xs">
+                    <div className="mt-6 px-4 py-2 glass-card-light rounded-xl ring-1 ring-white/10 flex items-center gap-2 max-w-xs">
                         <CheckCircle2 size={16} className="text-emerald-500 flex-shrink-0" />
                         <span className="text-sm font-medium text-slate-700 truncate">
                             {selectedTask.title}

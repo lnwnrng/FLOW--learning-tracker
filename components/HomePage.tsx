@@ -109,14 +109,7 @@ const HomePage: React.FC<HomePageProps> = ({
 
             {/* Hero Card - Today's Flow */}
             <div
-                className="relative overflow-hidden rounded-3xl p-6"
-                style={{
-                    background: `linear-gradient(135deg, 
-                        rgba(244, 114, 182, 0.12), 
-                        rgba(168, 85, 247, 0.18), 
-                        rgba(96, 165, 250, 0.12))`,
-                    backdropFilter: 'blur(20px)',
-                }}
+                className="relative overflow-hidden rounded-3xl p-6 glass-card ring-1 ring-white/10"
             >
                 {/* Decorative circles */}
                 <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br from-violet-400/20 to-transparent blur-2xl" />
@@ -147,7 +140,7 @@ const HomePage: React.FC<HomePageProps> = ({
                     </div>
 
                     {/* Mini Week Heatmap */}
-                    <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/50">
+                    <div className="glass-card-light rounded-2xl p-4 ring-1 ring-white/10">
                         <div className="flex items-center justify-between mb-3">
                             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">This Week</span>
                             <span className="text-xs text-slate-400">
@@ -172,7 +165,7 @@ const HomePage: React.FC<HomePageProps> = ({
             {/* Quick Stats Row */}
             <div className="grid grid-cols-3 gap-3">
                 {/* Streak */}
-                <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-4 border border-orange-100">
+                <div className="glass-card glass-card-amber rounded-2xl p-4 ring-1 ring-white/10">
                     <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center mb-2">
                         <Flame size={18} className="text-white" />
                     </div>
@@ -181,7 +174,7 @@ const HomePage: React.FC<HomePageProps> = ({
                 </div>
 
                 {/* Best Streak */}
-                <div className="bg-gradient-to-br from-violet-50 to-purple-50 rounded-2xl p-4 border border-violet-100">
+                <div className="glass-card glass-card-violet rounded-2xl p-4 ring-1 ring-white/10">
                     <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-400 to-purple-500 flex items-center justify-center mb-2">
                         <TrendingUp size={18} className="text-white" />
                     </div>
@@ -190,7 +183,7 @@ const HomePage: React.FC<HomePageProps> = ({
                 </div>
 
                 {/* Average */}
-                <div className="bg-gradient-to-br from-sky-50 to-blue-50 rounded-2xl p-4 border border-sky-100">
+                <div className="glass-card glass-card-sky rounded-2xl p-4 ring-1 ring-white/10">
                     <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-400 to-blue-500 flex items-center justify-center mb-2">
                         <Clock size={18} className="text-white" />
                     </div>

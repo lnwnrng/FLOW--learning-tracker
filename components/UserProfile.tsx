@@ -226,7 +226,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
                     return (
                         <div
                             key={index}
-                            className={`${stat.bgColor} rounded-2xl p-4 border border-white/60`}
+                            className="glass-card rounded-2xl p-4 ring-1 ring-white/10"
                         >
                             <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center mb-3`}>
                                 <Icon size={20} className="text-white" />
@@ -239,7 +239,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
             </div>
 
             {/* Quick Links */}
-            <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+            <div className="glass-card rounded-2xl overflow-hidden ring-1 ring-white/10">
                 {menuItems.map((item, index) => {
                     const Icon = item.icon;
                     return (
@@ -271,7 +271,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
             {/* Logout Button */}
             <button
                 onClick={onLogout}
-                className="w-full flex items-center justify-center gap-2 p-4 bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold rounded-2xl transition-colors"
+                className="w-full flex items-center justify-center gap-2 p-4 glass-card-light rounded-2xl transition-colors ring-1 ring-white/10 hover:bg-white/20 text-slate-600 font-semibold"
             >
                 <LogOut size={20} />
                 Sign Out

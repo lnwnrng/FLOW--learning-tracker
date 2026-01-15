@@ -74,7 +74,7 @@ const Dock: React.FC<DockProps> = ({ activeTab, setActiveTab }) => {
         md:bottom-auto md:top-1/2 md:left-6 md:-translate-y-1/2 md:w-auto md:max-w-none md:translate-x-0
       ">
         <nav className="
-          bg-white/90 backdrop-blur-2xl border border-white/60 shadow-[0_8px_40px_rgba(0,0,0,0.08)]
+          glass-dock
           rounded-[2rem] px-4 py-2.5 flex items-center justify-around
           md:flex-col md:px-3 md:py-6 md:gap-2 md:h-auto
           transition-all duration-500 ease-out
