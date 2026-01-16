@@ -1,23 +1,28 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, Square, Clock, Calendar, CheckCircle2 } from 'lucide-react';
+import { Clock, Calendar, CheckCircle2, RotateCcw, X } from 'lucide-react';
 import { Task } from '../types';
 
 interface FocusTimerProps {
     tasks?: Task[];
-    todayFocusTime?: number; // in seconds
+    todayFocusTime?: number;
     onSessionComplete?: (duration: number, taskId?: string) => void;
 }
+
+type OrbState = 'idle' | 'forming' | 'running' | 'dissolving';
 
 const FocusTimer: React.FC<FocusTimerProps> = ({
     tasks = [],
     todayFocusTime = 0,
     onSessionComplete,
 }) => {
-    const [isRunning, setIsRunning] = useState(false);
-    const [elapsedTime, setElapsedTime] = useState(0); // in seconds
+    const [orbState, setOrbState] = useState<OrbState>('idle');
+    const [elapsedTime, setElapsedTime] = useState(0);
     const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
     const intervalRef = useRef<number | null>(null);
     const startTimeRef = useRef<number | null>(null);
+
+    const isRunning = orbState === 'running';
+    const isActive = orbState === 'running' || orbState === 'forming';
 
     // Timer logic
     useEffect(() => {
@@ -61,107 +66,226 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
         return `${mins}m`;
     };
 
-    const handleStart = () => {
-        setIsRunning(true);
-    };
-
-    const handlePause = () => {
-        setIsRunning(false);
-    };
-
-    const handleStop = () => {
-        setIsRunning(false);
-        if (elapsedTime > 0) {
-            onSessionComplete?.(elapsedTime, selectedTaskId || undefined);
+    const handleOrbClick = () => {
+        if (orbState === 'idle') {
+            // Start: transition from idle -> forming -> running
+            setOrbState('forming');
+            setTimeout(() => {
+                setOrbState('running');
+            }, 500); // Match the dropletForm animation duration
+        } else if (orbState === 'running') {
+            // Pause: transition from running -> dissolving -> idle (paused)
+            setOrbState('dissolving');
+            setTimeout(() => {
+                setOrbState('idle');
+            }, 400); // Match the dropletDissolve animation duration
+        } else if (orbState === 'dissolving' || orbState === 'forming') {
+            // If in transition, do nothing
+            return;
         }
-        setElapsedTime(0);
-        setSelectedTaskId(null);
+    };
+
+    const handleReset = () => {
+        if (orbState === 'running') {
+            setOrbState('dissolving');
+            setTimeout(() => {
+                setOrbState('idle');
+                setElapsedTime(0);
+                setSelectedTaskId(null);
+            }, 400);
+        } else {
+            setOrbState('idle');
+            setElapsedTime(0);
+            setSelectedTaskId(null);
+        }
+    };
+
+    const handleComplete = () => {
+        if (orbState === 'running') {
+            setOrbState('dissolving');
+            setTimeout(() => {
+                setOrbState('idle');
+                if (elapsedTime > 0) {
+                    onSessionComplete?.(elapsedTime, selectedTaskId || undefined);
+                }
+                setElapsedTime(0);
+                setSelectedTaskId(null);
+            }, 400);
+        } else {
+            if (elapsedTime > 0) {
+                onSessionComplete?.(elapsedTime, selectedTaskId || undefined);
+            }
+            setElapsedTime(0);
+            setSelectedTaskId(null);
+        }
+    };
+
+    const handleResume = () => {
+        if (orbState === 'idle' && elapsedTime > 0) {
+            setOrbState('forming');
+            setTimeout(() => {
+                setOrbState('running');
+            }, 500);
+        }
     };
 
     const selectedTask = tasks.find(t => t.id === selectedTaskId);
     const incompleteTasks = tasks.filter(t => !t.completed);
 
+    // Determine CSS class for orb state
+    const getOrbClass = () => {
+        switch (orbState) {
+            case 'forming': return 'timer-glass-forming';
+            case 'running': return 'timer-glass-active';
+            case 'dissolving': return 'timer-glass-dissolving';
+            default: return 'timer-glass';
+        }
+    };
+
     return (
         <div className="animate-fade-in min-h-[70vh] flex flex-col">
             {/* Today's Summary */}
-            <div className="glass-card glass-card-sky rounded-2xl p-4 mb-6 ring-1 ring-white/10">
+            <div className="glass-card glass-card-sky rounded-2xl p-5 mb-8 ring-1 ring-white/20">
                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
-                            <Clock size={20} className="text-sky-500" />
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl flex items-center justify-center"
+                            style={{
+                                background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(139, 92, 246, 0.1))',
+                                backdropFilter: 'blur(8px)',
+                                border: '1px solid rgba(255, 255, 255, 0.25)',
+                                boxShadow: '0 4px 16px -4px rgba(56, 189, 248, 0.2)'
+                            }}>
+                            <Clock size={22} className="text-sky-500" />
                         </div>
                         <div>
-                            <p className="text-sm text-sky-600 font-medium">Today's Focus</p>
-                            <p className="text-xl font-bold text-slate-800">
+                            <p className="text-sm text-sky-600/80 font-medium">Today's Flow</p>
+                            <p className="text-2xl font-bold bg-gradient-to-r from-sky-600 to-violet-600 bg-clip-text text-transparent">
                                 {formatMinutes(todayFocusTime + elapsedTime)}
                             </p>
                         </div>
                     </div>
                     <div className="text-right">
-                        <p className="text-xs text-slate-500">Sessions</p>
-                        <p className="text-lg font-bold text-slate-700">3</p>
+                        <p className="text-xs text-slate-500 mb-1">Sessions</p>
+                        <div className="flex items-center gap-1.5 justify-end">
+                            <div className="w-3 h-3 rounded-full bg-gradient-to-br from-amber-400 to-orange-500" />
+                            <span className="text-lg font-bold text-slate-700">3</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {/* Timer Display */}
-            <div className="flex-1 flex flex-col items-center justify-center py-8">
-                {/* Timer Circle */}
-                <div className="relative">
-                    {/* Outer ring - animated when running */}
-                    <div
+            {/* Timer Display - Realistic Water Droplet */}
+            <div className="flex-1 flex flex-col items-center py-6" style={{ minHeight: '380px' }}>
+                {/* Main Timer Container - Fixed position wrapper */}
+                <div className="relative flex items-center justify-center" style={{ height: '280px', width: '280px' }}>
+                    {/* Main Interactive Water Droplet Orb */}
+                    <button
+                        onClick={orbState === 'idle' && elapsedTime > 0 ? handleResume : handleOrbClick}
+                        disabled={orbState === 'forming' || orbState === 'dissolving'}
                         className={`
-              absolute inset-0 rounded-full
-              ${isRunning ? 'animate-pulse' : ''}
-            `}
+                            relative w-64 h-64 
+                            flex flex-col items-center justify-center
+                            cursor-pointer
+                            focus:outline-none
+                            ${orbState === 'forming' || orbState === 'dissolving' ? 'cursor-wait' : ''}
+                            ${getOrbClass()}
+                        `}
                         style={{
-                            background: isRunning
-                                ? 'conic-gradient(from 0deg, #0ea5e9, #38bdf8, #7dd3fc, #0ea5e9)'
-                                : 'transparent',
-                            padding: '3px',
+                            borderRadius: '50%',
+                            animation: isRunning ? 'waterDropFloat 12s ease-in-out infinite' : undefined,
                         }}
                     >
-                        <div className="w-full h-full rounded-full bg-[#F8FAFC]" />
-                    </div>
+                        {/* Primary Highlight - Top left surface reflection (specular) */}
+                        <div
+                            className="absolute pointer-events-none"
+                            style={{
+                                top: '8%',
+                                left: '12%',
+                                width: '45%',
+                                height: '32%',
+                                background: 'radial-gradient(ellipse 70% 60% at 40% 40%, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.25) 35%, transparent 65%)',
+                                borderRadius: '50%',
+                                filter: 'blur(1px)',
+                                opacity: isActive ? 0.9 : 0.75
+                            }}
+                        />
 
-                    {/* Main timer container */}
-                    <div
-                        className={`
-              relative w-56 h-56 rounded-full 
-              flex flex-col items-center justify-center
-              transition-all duration-500
-              ${isRunning
-                                ? 'bg-gradient-to-br from-sky-400 to-blue-500 shadow-2xl shadow-sky-500/30'
-                                : 'bg-white border-2 border-slate-200 shadow-lg shadow-slate-200/50'
-                            }
-            `}
-                    >
-                        {/* Time display */}
+                        {/* Secondary Highlight - Right side accent */}
+                        <div
+                            className="absolute pointer-events-none"
+                            style={{
+                                top: '14%',
+                                left: '55%',
+                                width: '16%',
+                                height: '12%',
+                                background: 'radial-gradient(ellipse at 50% 50%, rgba(255,255,255,0.5) 0%, transparent 70%)',
+                                borderRadius: '50%',
+                                filter: 'blur(1px)',
+                                opacity: isActive ? 0.75 : 0.55
+                            }}
+                        />
+
+                        {/* Bottom Curve Shadow - Depth under the sphere */}
+                        <div
+                            className="absolute pointer-events-none"
+                            style={{
+                                bottom: '8%',
+                                left: '20%',
+                                right: '20%',
+                                height: '20%',
+                                background: 'radial-gradient(ellipse 90% 70% at 50% 100%, rgba(14, 165, 233, 0.08) 0%, transparent 70%)',
+                                borderRadius: '50%',
+                                filter: 'blur(3px)',
+                                opacity: isActive ? 0.8 : 0.6
+                            }}
+                        />
+
+                        {/* Time Display */}
                         <span
-                            className={`
-                text-4xl font-bold tracking-tight font-mono
-                ${isRunning ? 'text-white' : 'text-slate-700'}
-              `}
+                            className="text-5xl font-bold tracking-tight font-mono relative z-10 transition-all duration-500"
+                            style={{
+                                color: '#1e293b',
+                                textShadow: isActive
+                                    ? '0 2px 8px rgba(255,255,255,0.6), 0 0 30px rgba(56, 189, 248, 0.2)'
+                                    : '0 1px 4px rgba(255,255,255,0.4)'
+                            }}
                         >
                             {formatTime(elapsedTime)}
                         </span>
 
-                        {/* Status text */}
-                        <span
-                            className={`
-                text-sm font-medium mt-2
-                ${isRunning ? 'text-white/70' : 'text-slate-400'}
-              `}
-                        >
-                            {isRunning ? 'Focusing...' : elapsedTime > 0 ? 'Paused' : 'Ready'}
-                        </span>
-                    </div>
+                        {/* Status Label */}
+                        <div className="flex items-center gap-2 mt-4 px-4 py-1.5 rounded-full transition-all duration-500"
+                            style={{
+                                background: 'rgba(255, 255, 255, 0.4)',
+                                border: '1px solid rgba(255, 255, 255, 0.5)',
+                                backdropFilter: 'blur(8px)',
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+                            }}>
+                            {isRunning && (
+                                <span
+                                    className="w-2 h-2 rounded-full"
+                                    style={{
+                                        background: 'linear-gradient(135deg, #34d399, #10b981)',
+                                        animation: 'softPulse 2.5s ease-in-out infinite'
+                                    }}
+                                />
+                            )}
+                            <span className="text-sm font-medium text-slate-600">
+                                {orbState === 'forming' ? 'Starting...' :
+                                    orbState === 'running' ? 'In Flow' :
+                                        orbState === 'dissolving' ? 'Pausing...' :
+                                            elapsedTime > 0 ? 'Paused' : 'Tap to Start'}
+                            </span>
+                        </div>
+                    </button>
                 </div>
 
-                {/* Selected Task */}
+                {/* Selected Task Badge */}
                 {selectedTask && (
-                    <div className="mt-6 px-4 py-2 glass-card-light rounded-xl ring-1 ring-white/10 flex items-center gap-2 max-w-xs">
-                        <CheckCircle2 size={16} className="text-emerald-500 flex-shrink-0" />
+                    <div className="mt-8 px-5 py-2.5 glass-card-light rounded-2xl ring-1 ring-white/20 flex items-center gap-3 max-w-xs">
+                        <div className="w-6 h-6 rounded-lg bg-emerald-500/15 flex items-center justify-center">
+                            <CheckCircle2 size={14} className="text-emerald-500" />
+                        </div>
                         <span className="text-sm font-medium text-slate-700 truncate">
                             {selectedTask.title}
                         </span>
@@ -169,80 +293,98 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
                 )}
             </div>
 
-            {/* Task Selection */}
-            {!isRunning && incompleteTasks.length > 0 && (
-                <div className="mb-6">
-                    <p className="text-sm font-medium text-slate-500 mb-2 flex items-center gap-1.5">
-                        <Calendar size={14} />
-                        Link to a task (optional)
-                    </p>
-                    <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
-                        {incompleteTasks.slice(0, 5).map(task => (
-                            <button
-                                key={task.id}
-                                onClick={() => setSelectedTaskId(
-                                    selectedTaskId === task.id ? null : task.id
-                                )}
-                                className={`
-                  flex-shrink-0 px-3 py-2 rounded-xl text-sm font-medium
-                  transition-all duration-200
-                  ${selectedTaskId === task.id
-                                        ? 'bg-sky-500 text-white'
-                                        : 'bg-white text-slate-600 border border-slate-200 hover:border-sky-300'
-                                    }
-                `}
-                            >
-                                {task.title.length > 20 ? task.title.slice(0, 20) + '...' : task.title}
-                            </button>
-                        ))}
+            {/* Bottom Controls Area - Fixed height to prevent layout shift */}
+            <div style={{ minHeight: '140px' }} className="flex flex-col items-center">
+                {/* Task Selection */}
+                {orbState === 'idle' && incompleteTasks.length > 0 && elapsedTime === 0 && (
+                    <div className="mb-4 w-full">
+                        <p className="text-sm font-medium text-slate-500 mb-3 flex items-center gap-2">
+                            <Calendar size={14} />
+                            Link to a task (optional)
+                        </p>
+                        <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 no-scrollbar">
+                            {incompleteTasks.slice(0, 5).map(task => (
+                                <button
+                                    key={task.id}
+                                    onClick={() => setSelectedTaskId(
+                                        selectedTaskId === task.id ? null : task.id
+                                    )}
+                                    className={`
+                                        flex-shrink-0 px-4 py-2.5 rounded-xl text-sm font-medium
+                                        transition-all duration-300
+                                        ${selectedTaskId === task.id
+                                            ? 'bg-gradient-to-r from-sky-500 to-violet-500 text-white shadow-lg shadow-sky-500/20'
+                                            : 'glass-card-light text-slate-600 hover:ring-2 hover:ring-sky-300/40'
+                                        }
+                                    `}
+                                >
+                                    {task.title.length > 20 ? task.title.slice(0, 20) + '...' : task.title}
+                                </button>
+                            ))}
+                        </div>
                     </div>
-                </div>
-            )}
-
-            {/* Controls */}
-            <div className="flex items-center justify-center gap-4">
-                {!isRunning ? (
-                    <>
-                        {elapsedTime > 0 && (
-                            <button
-                                onClick={handleStop}
-                                className="w-14 h-14 rounded-2xl bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-slate-200 transition-colors"
-                            >
-                                <Square size={24} fill="currentColor" />
-                            </button>
-                        )}
-                        <button
-                            onClick={handleStart}
-                            className="w-20 h-20 rounded-full bg-gradient-to-br from-sky-400 to-blue-500 text-white flex items-center justify-center shadow-xl shadow-sky-500/30 hover:shadow-2xl hover:shadow-sky-500/40 hover:scale-105 active:scale-95 transition-all"
-                        >
-                            <Play size={36} fill="white" className="translate-x-0.5" />
-                        </button>
-                    </>
-                ) : (
-                    <>
-                        <button
-                            onClick={handleStop}
-                            className="w-14 h-14 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center hover:bg-rose-200 transition-colors"
-                        >
-                            <Square size={24} fill="currentColor" />
-                        </button>
-                        <button
-                            onClick={handlePause}
-                            className="w-20 h-20 rounded-full bg-white border-2 border-slate-200 text-slate-700 flex items-center justify-center shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all"
-                        >
-                            <Pause size={36} fill="currentColor" />
-                        </button>
-                    </>
                 )}
-            </div>
 
-            {/* Tip */}
-            <p className="text-center text-xs text-slate-400 mt-8">
-                {isRunning
-                    ? "Stay focused. You're doing great!"
-                    : "Tap the button to start your focus session"
-                }
-            </p>
+                {/* Controls - Only show when timer has time or is running */}
+                {(isRunning || elapsedTime > 0) && (
+                    <div className="flex items-center justify-center gap-4">
+                        {/* Reset Button */}
+                        <button
+                            onClick={handleReset}
+                            disabled={orbState === 'forming' || orbState === 'dissolving'}
+                            className="group relative w-12 h-12 rounded-full flex items-center justify-center
+                                transition-all duration-300 hover:scale-110 active:scale-95 disabled:opacity-50"
+                            style={{
+                                background: 'linear-gradient(135deg, rgba(241, 245, 249, 0.9), rgba(226, 232, 240, 0.7))',
+                                backdropFilter: 'blur(12px)',
+                                border: '1px solid rgba(255, 255, 255, 0.6)',
+                                boxShadow: '0 4px 20px -4px rgba(15, 23, 42, 0.1), inset 0 1px 2px rgba(255,255,255,0.6)'
+                            }}
+                            title="Reset"
+                        >
+                            <RotateCcw
+                                size={20}
+                                className="text-slate-500 group-hover:text-slate-700 transition-all duration-500 group-hover:-rotate-180"
+                            />
+                        </button>
+
+                        {/* Complete/End Session Button */}
+                        <button
+                            onClick={handleComplete}
+                            disabled={orbState === 'forming' || orbState === 'dissolving'}
+                            className="group relative w-14 h-14 rounded-full flex items-center justify-center
+                                transition-all duration-300 hover:scale-110 active:scale-95 disabled:opacity-50"
+                            style={{
+                                background: 'linear-gradient(135deg, rgba(254, 226, 226, 0.8), rgba(254, 202, 202, 0.6))',
+                                backdropFilter: 'blur(12px)',
+                                border: '1px solid rgba(252, 165, 165, 0.4)',
+                                boxShadow: '0 4px 24px -4px rgba(239, 68, 68, 0.2), inset 0 1px 2px rgba(255,255,255,0.4)'
+                            }}
+                            title="End Session"
+                        >
+                            <X
+                                size={24}
+                                className="text-rose-400 group-hover:text-rose-500 transition-colors duration-300"
+                                strokeWidth={2.5}
+                            />
+                        </button>
+                    </div>
+                )}
+
+                {/* Hint Text */}
+                <p className="text-center text-sm text-slate-400 mt-4 font-medium">
+                    {orbState === 'running'
+                        ? "Tap the droplet to pause"
+                        : orbState === 'forming'
+                            ? "Forming..."
+                            : orbState === 'dissolving'
+                                ? "Settling..."
+                                : elapsedTime > 0
+                                    ? "Tap to continue, or end your session"
+                                    : "Tap the orb to begin your focus session"
+                    }
+                </p>
+            </div>
         </div>
     );
 };
