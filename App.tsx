@@ -7,6 +7,9 @@ import UserProfile from './components/UserProfile';
 import StatsPage from './components/StatsPage';
 import FocusTimer from './components/FocusTimer';
 import HomePage from './components/HomePage';
+import AchievementsPage from './components/AchievementsPage';
+import PremiumPage from './components/PremiumPage';
+import SettingsPage from './components/SettingsPage';
 import { Tab, Task, User, UserStats } from './types';
 
 // Category to color mapping for calendar dots
@@ -42,6 +45,7 @@ const App: React.FC = () => {
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
   const [user, setUser] = useState<User>(defaultUser);
   const [stats] = useState<UserStats>(defaultStats);
+  const [subPage, setSubPage] = useState<'achievements' | 'settings' | 'premium' | null>(null);
 
   // Filter tasks for selected date
   const tasksForSelectedDate = tasks.filter(task => {
@@ -117,12 +121,41 @@ const App: React.FC = () => {
         );
 
       case Tab.USER:
+        // Handle sub-pages within User tab
+        if (subPage === 'achievements') {
+          return (
+            <AchievementsPage
+              onBack={() => setSubPage(null)}
+              currentStreak={stats.currentStreak}
+              longestStreak={stats.longestStreak}
+              totalFocusTime={stats.totalFocusTime}
+              totalSessions={stats.totalSessions}
+              tasksCompleted={stats.tasksCompleted}
+            />
+          );
+        }
+        if (subPage === 'settings') {
+          return <SettingsPage onBack={() => setSubPage(null)} />;
+        }
+        if (subPage === 'premium') {
+          return (
+            <PremiumPage
+              onBack={() => setSubPage(null)}
+              isPremium={user.isPremium}
+              onUpgrade={() => {
+                setUser(prev => ({ ...prev, isPremium: true }));
+                setSubPage(null);
+              }}
+            />
+          );
+        }
         return (
           <UserProfile
             user={user}
             stats={stats}
             onUpdateUser={handleUpdateUser}
             onLogout={handleLogout}
+            onNavigate={(page) => setSubPage(page)}
           />
         );
 

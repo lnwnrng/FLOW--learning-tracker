@@ -10,7 +10,8 @@ import {
     ChevronRight,
     Crown,
     Check,
-    X
+    X,
+    Settings
 } from 'lucide-react';
 import { User, UserStats } from '../types';
 
@@ -19,13 +20,15 @@ interface UserProfileProps {
     stats: UserStats;
     onUpdateUser: (user: Partial<User>) => void;
     onLogout: () => void;
+    onNavigate?: (page: 'achievements' | 'settings' | 'premium') => void;
 }
 
 const UserProfile: React.FC<UserProfileProps> = ({
     user,
     stats,
     onUpdateUser,
-    onLogout
+    onLogout,
+    onNavigate
 }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [editName, setEditName] = useState(user.name);
@@ -95,9 +98,9 @@ const UserProfile: React.FC<UserProfileProps> = ({
     ];
 
     const menuItems = [
-        { label: 'Achievements', icon: Trophy, badge: '3 new' },
-        { label: 'Statistics', icon: Clock },
-        { label: 'Upgrade to Premium', icon: Crown, highlight: true },
+        { label: 'Achievements', icon: Trophy, badge: '3 new', action: 'achievements' as const },
+        { label: 'Settings', icon: Settings, action: 'settings' as const },
+        { label: 'Upgrade to Premium', icon: Crown, highlight: true, action: 'premium' as const },
     ];
 
     return (
@@ -223,10 +226,15 @@ const UserProfile: React.FC<UserProfileProps> = ({
             <div className="grid grid-cols-2 gap-3">
                 {statCards.map((stat, index) => {
                     const Icon = stat.icon;
+                    // Map bgColor to glass-card color variant
+                    const glassColorClass = stat.bgColor === 'bg-violet-50' ? 'glass-card-violet'
+                        : stat.bgColor === 'bg-orange-50' ? 'glass-card-amber'
+                            : stat.bgColor === 'bg-amber-50' ? 'glass-card-amber'
+                                : 'glass-card-emerald';
                     return (
                         <div
                             key={index}
-                            className="glass-card rounded-2xl p-4 ring-1 ring-white/10"
+                            className={`glass-card ${glassColorClass} rounded-2xl p-4 ring-1 ring-white/10`}
                         >
                             <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center mb-3`}>
                                 <Icon size={20} className="text-white" />
@@ -245,7 +253,8 @@ const UserProfile: React.FC<UserProfileProps> = ({
                     return (
                         <button
                             key={index}
-                            className={`w-full flex items-center justify-between p-4 hover:bg-slate-50 transition-colors ${index !== menuItems.length - 1 ? 'border-b border-slate-100' : ''}`}
+                            onClick={() => onNavigate?.(item.action)}
+                            className={`w-full flex items-center justify-between p-4 hover:bg-white/30 transition-colors ${index !== menuItems.length - 1 ? 'border-b border-white/20' : ''}`}
                         >
                             <div className="flex items-center gap-3">
                                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${item.highlight ? 'bg-gradient-to-br from-amber-400 to-yellow-500' : 'bg-slate-100'}`}>

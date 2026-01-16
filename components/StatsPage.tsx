@@ -222,10 +222,15 @@ const StatsPage: React.FC<StatsPageProps> = ({
             <div className="grid grid-cols-2 gap-3">
                 {summaryCards.map((card, index) => {
                     const Icon = card.icon;
+                    // Map bgColor to glass-card color variant
+                    const glassColorClass = card.bgColor === 'bg-violet-50' ? 'glass-card-violet'
+                        : card.bgColor === 'bg-orange-50' ? 'glass-card-amber'
+                            : card.bgColor === 'bg-emerald-50' ? 'glass-card-emerald'
+                                : 'glass-card-sky';
                     return (
                         <div
                             key={index}
-                            className="glass-card rounded-2xl p-4 ring-1 ring-white/10"
+                            className={`glass-card ${glassColorClass} rounded-2xl p-4 ring-1 ring-white/10`}
                         >
                             <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${card.color} flex items-center justify-center mb-2`}>
                                 <Icon size={18} className="text-white" />
