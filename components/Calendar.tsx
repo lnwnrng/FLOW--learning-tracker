@@ -88,12 +88,10 @@ const Calendar: React.FC<CalendarProps> = ({
   };
 
   const formatHeader = () => {
-    const day = selectedDate || today;
-    const dayNum = day.getDate();
-    const month = day.toLocaleString('en-US', { month: 'short' });
-    const year = day.getFullYear().toString().slice(-2);
-    const weekday = day.toLocaleString('en-US', { weekday: 'long' });
-    return `${dayNum} ${month}, ${year} ${weekday}`;
+    // Show the current viewing month, not the selected date
+    const month = currentMonth.toLocaleString('en-US', { month: 'long' });
+    const year = currentMonth.getFullYear();
+    return `${month} ${year}`;
   };
 
   return (
@@ -149,7 +147,7 @@ const Calendar: React.FC<CalendarProps> = ({
                   transition-all duration-200
                   ${!day.isCurrentMonth ? 'text-slate-300' : 'text-slate-600'}
                   ${selected
-                    ? 'bg-slate-800 text-white shadow-md shadow-slate-300/50'
+                    ? 'bg-gradient-to-br from-violet-500 to-sky-500 text-white shadow-md shadow-violet-300/50'
                     : day.isCurrentMonth
                       ? 'hover:bg-white/80 hover:shadow-sm'
                       : ''

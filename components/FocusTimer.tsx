@@ -1,50 +1,38 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React from 'react';
 import { Clock, Calendar, CheckCircle2, RotateCcw, X } from 'lucide-react';
 import { Task } from '../types';
+
+type OrbState = 'idle' | 'forming' | 'running' | 'dissolving';
 
 interface FocusTimerProps {
     tasks?: Task[];
     todayFocusTime?: number;
-    onSessionComplete?: (duration: number, taskId?: string) => void;
+    // Timer state from parent
+    orbState: OrbState;
+    elapsedTime: number;
+    selectedTaskId: string | null;
+    // Timer controls from parent
+    onStart: () => void;
+    onPause: () => void;
+    onReset: () => void;
+    onComplete: () => void;
+    onSelectTask: (taskId: string | null) => void;
 }
-
-type OrbState = 'idle' | 'forming' | 'running' | 'dissolving';
 
 const FocusTimer: React.FC<FocusTimerProps> = ({
     tasks = [],
     todayFocusTime = 0,
-    onSessionComplete,
+    orbState,
+    elapsedTime,
+    selectedTaskId,
+    onStart,
+    onPause,
+    onReset,
+    onComplete,
+    onSelectTask,
 }) => {
-    const [orbState, setOrbState] = useState<OrbState>('idle');
-    const [elapsedTime, setElapsedTime] = useState(0);
-    const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
-    const intervalRef = useRef<number | null>(null);
-    const startTimeRef = useRef<number | null>(null);
-
     const isRunning = orbState === 'running';
     const isActive = orbState === 'running' || orbState === 'forming';
-
-    // Timer logic
-    useEffect(() => {
-        if (isRunning) {
-            startTimeRef.current = Date.now() - elapsedTime * 1000;
-            intervalRef.current = window.setInterval(() => {
-                if (startTimeRef.current) {
-                    setElapsedTime(Math.floor((Date.now() - startTimeRef.current) / 1000));
-                }
-            }, 100);
-        } else {
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-            }
-        }
-
-        return () => {
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-            }
-        };
-    }, [isRunning]);
 
     const formatTime = (seconds: number) => {
         const hrs = Math.floor(seconds / 3600);
@@ -68,65 +56,18 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
 
     const handleOrbClick = () => {
         if (orbState === 'idle') {
-            // Start: transition from idle -> forming -> running
-            setOrbState('forming');
-            setTimeout(() => {
-                setOrbState('running');
-            }, 500); // Match the dropletForm animation duration
-        } else if (orbState === 'running') {
-            // Pause: transition from running -> dissolving -> idle (paused)
-            setOrbState('dissolving');
-            setTimeout(() => {
-                setOrbState('idle');
-            }, 400); // Match the dropletDissolve animation duration
-        } else if (orbState === 'dissolving' || orbState === 'forming') {
-            // If in transition, do nothing
-            return;
-        }
-    };
-
-    const handleReset = () => {
-        if (orbState === 'running') {
-            setOrbState('dissolving');
-            setTimeout(() => {
-                setOrbState('idle');
-                setElapsedTime(0);
-                setSelectedTaskId(null);
-            }, 400);
-        } else {
-            setOrbState('idle');
-            setElapsedTime(0);
-            setSelectedTaskId(null);
-        }
-    };
-
-    const handleComplete = () => {
-        if (orbState === 'running') {
-            setOrbState('dissolving');
-            setTimeout(() => {
-                setOrbState('idle');
-                if (elapsedTime > 0) {
-                    onSessionComplete?.(elapsedTime, selectedTaskId || undefined);
-                }
-                setElapsedTime(0);
-                setSelectedTaskId(null);
-            }, 400);
-        } else {
             if (elapsedTime > 0) {
-                onSessionComplete?.(elapsedTime, selectedTaskId || undefined);
+                // Resume
+                onStart();
+            } else {
+                // Start fresh
+                onStart();
             }
-            setElapsedTime(0);
-            setSelectedTaskId(null);
+        } else if (orbState === 'running') {
+            // Pause
+            onPause();
         }
-    };
-
-    const handleResume = () => {
-        if (orbState === 'idle' && elapsedTime > 0) {
-            setOrbState('forming');
-            setTimeout(() => {
-                setOrbState('running');
-            }, 500);
-        }
+        // If in transition, do nothing
     };
 
     const selectedTask = tasks.find(t => t.id === selectedTaskId);
@@ -180,7 +121,7 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
                 <div className="relative flex items-center justify-center" style={{ height: '280px', width: '280px' }}>
                     {/* Main Interactive Water Droplet Orb */}
                     <button
-                        onClick={orbState === 'idle' && elapsedTime > 0 ? handleResume : handleOrbClick}
+                        onClick={handleOrbClick}
                         disabled={orbState === 'forming' || orbState === 'dissolving'}
                         className={`
                             relative w-64 h-64 
@@ -306,7 +247,7 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
                             {incompleteTasks.slice(0, 5).map(task => (
                                 <button
                                     key={task.id}
-                                    onClick={() => setSelectedTaskId(
+                                    onClick={() => onSelectTask(
                                         selectedTaskId === task.id ? null : task.id
                                     )}
                                     className={`
@@ -330,7 +271,7 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
                     <div className="flex items-center justify-center gap-4">
                         {/* Reset Button */}
                         <button
-                            onClick={handleReset}
+                            onClick={onReset}
                             disabled={orbState === 'forming' || orbState === 'dissolving'}
                             className="group relative w-12 h-12 rounded-full flex items-center justify-center
                                 transition-all duration-300 hover:scale-110 active:scale-95 disabled:opacity-50"
@@ -350,7 +291,7 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
 
                         {/* Complete/End Session Button */}
                         <button
-                            onClick={handleComplete}
+                            onClick={onComplete}
                             disabled={orbState === 'forming' || orbState === 'dissolving'}
                             className="group relative w-14 h-14 rounded-full flex items-center justify-center
                                 transition-all duration-300 hover:scale-110 active:scale-95 disabled:opacity-50"

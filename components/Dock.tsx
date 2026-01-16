@@ -5,15 +5,17 @@ import { Tab } from '../types';
 interface DockProps {
   activeTab: Tab;
   setActiveTab: (tab: Tab) => void;
+  isTimerRunning?: boolean;
 }
 
 // Custom Flow Icon - water drop with wave/flow motion
-const FlowIcon: React.FC<{ size?: number }> = ({ size = 28 }) => (
+const FlowIcon: React.FC<{ size?: number; isAnimating?: boolean }> = ({ size = 28, isAnimating = false }) => (
   <svg
     width={size}
     height={size}
     viewBox="0 0 24 24"
     fill="none"
+    className={isAnimating ? 'flow-icon-animating' : ''}
   >
     {/* Flowing wave shape */}
     <path
@@ -22,6 +24,7 @@ const FlowIcon: React.FC<{ size?: number }> = ({ size = 28 }) => (
       strokeWidth="2.5"
       strokeLinecap="round"
       strokeLinejoin="round"
+      className={isAnimating ? 'flow-wave-path' : ''}
     />
     <path
       d="M4 16C4 16 6 13 9 13C12 13 12 16 15 16C18 16 20 13 20 13"
@@ -30,6 +33,7 @@ const FlowIcon: React.FC<{ size?: number }> = ({ size = 28 }) => (
       strokeLinecap="round"
       strokeLinejoin="round"
       opacity="0.6"
+      className={isAnimating ? 'flow-wave-path-delayed' : ''}
     />
   </svg>
 );
@@ -58,7 +62,7 @@ const navItemColors = {
   },
 };
 
-const Dock: React.FC<DockProps> = ({ activeTab, setActiveTab }) => {
+const Dock: React.FC<DockProps> = ({ activeTab, setActiveTab, isTimerRunning = false }) => {
   const navItems = [
     { id: Tab.HOME, icon: Home, label: 'Home' },
     { id: Tab.STATS, icon: BarChart2, label: 'Stats' },
@@ -90,7 +94,7 @@ const Dock: React.FC<DockProps> = ({ activeTab, setActiveTab }) => {
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className="
+                  className={`
                     group relative flex items-center justify-center
                     w-14 h-14 md:w-12 md:h-12 rounded-full 
                     bg-gradient-to-br from-rose-400 via-violet-500 to-cyan-400
@@ -99,17 +103,15 @@ const Dock: React.FC<DockProps> = ({ activeTab, setActiveTab }) => {
                     active:scale-95
                     transition-all duration-300 ease-out
                     -my-3 md:my-2
-                  "
+                    ${isTimerRunning ? 'dock-breathing' : ''}
+                  `}
                   aria-label={item.label}
                 >
-                  <FlowIcon size={26} />
-
-                  {/* Animated gradient ring */}
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-rose-400 via-violet-500 to-cyan-400 opacity-0 group-hover:opacity-50 blur-xl transition-opacity duration-300" />
+                  <FlowIcon size={26} isAnimating={isTimerRunning} />
 
                   {/* Tooltip */}
                   <span className="absolute left-full ml-4 px-3 py-1.5 bg-slate-800 text-white text-xs font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0 hidden md:block whitespace-nowrap pointer-events-none shadow-lg">
-                    Start Focus
+                    Start Flow
                   </span>
                 </button>
               );

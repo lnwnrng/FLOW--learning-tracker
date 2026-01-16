@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Dock from './components/Dock';
 import Calendar from './components/Calendar';
 import TaskList from './components/TaskList';
@@ -46,6 +46,89 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User>(defaultUser);
   const [stats] = useState<UserStats>(defaultStats);
   const [subPage, setSubPage] = useState<'achievements' | 'settings' | 'premium' | null>(null);
+
+  // Timer state - lifted from FocusTimer to persist across page navigation
+  const [timerOrbState, setTimerOrbState] = useState<'idle' | 'forming' | 'running' | 'dissolving'>('idle');
+  const [timerElapsedTime, setTimerElapsedTime] = useState(0);
+  const [timerSelectedTaskId, setTimerSelectedTaskId] = useState<string | null>(null);
+  const timerIntervalRef = useRef<number | null>(null);
+  const timerStartTimeRef = useRef<number | null>(null);
+
+  const isTimerRunning = timerOrbState === 'running';
+
+  // Timer interval logic - runs at App level so it persists
+  useEffect(() => {
+    if (isTimerRunning) {
+      timerStartTimeRef.current = Date.now() - timerElapsedTime * 1000;
+      timerIntervalRef.current = window.setInterval(() => {
+        if (timerStartTimeRef.current) {
+          setTimerElapsedTime(Math.floor((Date.now() - timerStartTimeRef.current) / 1000));
+        }
+      }, 100);
+    } else {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
+    }
+
+    return () => {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
+    };
+  }, [isTimerRunning]);
+
+  // Timer controls
+  const handleTimerStart = useCallback(() => {
+    if (timerOrbState === 'idle') {
+      setTimerOrbState('forming');
+      setTimeout(() => setTimerOrbState('running'), 500);
+    }
+  }, [timerOrbState]);
+
+  const handleTimerPause = useCallback(() => {
+    if (timerOrbState === 'running') {
+      setTimerOrbState('dissolving');
+      setTimeout(() => setTimerOrbState('idle'), 400);
+    }
+  }, [timerOrbState]);
+
+  const handleTimerReset = useCallback(() => {
+    if (timerOrbState === 'running') {
+      setTimerOrbState('dissolving');
+      setTimeout(() => {
+        setTimerOrbState('idle');
+        setTimerElapsedTime(0);
+        setTimerSelectedTaskId(null);
+      }, 400);
+    } else {
+      setTimerOrbState('idle');
+      setTimerElapsedTime(0);
+      setTimerSelectedTaskId(null);
+    }
+  }, [timerOrbState]);
+
+  const handleTimerComplete = useCallback(() => {
+    const duration = timerElapsedTime;
+    const taskId = timerSelectedTaskId;
+    if (timerOrbState === 'running') {
+      setTimerOrbState('dissolving');
+      setTimeout(() => {
+        setTimerOrbState('idle');
+        if (duration > 0) {
+          console.log('Session completed:', duration, 'seconds, task:', taskId);
+        }
+        setTimerElapsedTime(0);
+        setTimerSelectedTaskId(null);
+      }, 400);
+    } else {
+      if (duration > 0) {
+        console.log('Session completed:', duration, 'seconds, task:', taskId);
+      }
+      setTimerElapsedTime(0);
+      setTimerSelectedTaskId(null);
+    }
+  }, [timerOrbState, timerElapsedTime, timerSelectedTaskId]);
 
   // Filter tasks for selected date
   const tasksForSelectedDate = tasks.filter(task => {
@@ -112,11 +195,15 @@ const App: React.FC = () => {
         return (
           <FocusTimer
             tasks={tasksForSelectedDate}
-            todayFocusTime={3600} // Mock: 1 hour
-            onSessionComplete={(duration, taskId) => {
-              console.log('Session completed:', duration, 'seconds, task:', taskId);
-              // TODO: Save to heatmap data
-            }}
+            todayFocusTime={3600}
+            orbState={timerOrbState}
+            elapsedTime={timerElapsedTime}
+            selectedTaskId={timerSelectedTaskId}
+            onStart={handleTimerStart}
+            onPause={handleTimerPause}
+            onReset={handleTimerReset}
+            onComplete={handleTimerComplete}
+            onSelectTask={setTimerSelectedTaskId}
           />
         );
 
@@ -180,18 +267,30 @@ const App: React.FC = () => {
     }
   };
 
+  // Dynamic background based on active tab
+  const getBackground = () => {
+    if (activeTab === Tab.FOCUS) {
+      return `
+        radial-gradient(ellipse 90% 70% at 50% 0%, rgba(139, 92, 246, 0.18), transparent),
+        radial-gradient(ellipse 70% 60% at 100% 30%, rgba(56, 189, 248, 0.15), transparent),
+        radial-gradient(ellipse 60% 50% at 0% 70%, rgba(249, 168, 212, 0.14), transparent),
+        radial-gradient(ellipse 50% 60% at 80% 100%, rgba(167, 139, 250, 0.12), transparent),
+        linear-gradient(180deg, #f5f3ff 0%, #f0f9ff 50%, #fdf4ff 100%)
+      `;
+    }
+    return `
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(120, 119, 198, 0.15), transparent),
+      radial-gradient(ellipse 60% 40% at 100% 0%, rgba(249, 168, 212, 0.12), transparent),
+      radial-gradient(ellipse 50% 50% at 0% 100%, rgba(56, 189, 248, 0.10), transparent),
+      radial-gradient(ellipse 40% 40% at 80% 80%, rgba(167, 139, 250, 0.08), transparent),
+      #F8FAFC
+    `;
+  };
+
   return (
     <div
-      className="min-h-screen text-slate-900 selection:bg-violet-500 selection:text-white relative"
-      style={{
-        background: `
-          radial-gradient(ellipse 80% 50% at 50% -20%, rgba(120, 119, 198, 0.15), transparent),
-          radial-gradient(ellipse 60% 40% at 100% 0%, rgba(249, 168, 212, 0.12), transparent),
-          radial-gradient(ellipse 50% 50% at 0% 100%, rgba(56, 189, 248, 0.10), transparent),
-          radial-gradient(ellipse 40% 40% at 80% 80%, rgba(167, 139, 250, 0.08), transparent),
-          #F8FAFC
-        `
-      }}
+      className="min-h-screen text-slate-900 selection:bg-violet-500 selection:text-white relative transition-all duration-700"
+      style={{ background: getBackground() }}
     >
 
       <main className="
@@ -203,7 +302,7 @@ const App: React.FC = () => {
       </main>
 
       {/* Navigation Dock */}
-      <Dock activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Dock activeTab={activeTab} setActiveTab={setActiveTab} isTimerRunning={isTimerRunning} />
 
       {/* Add Task Modal */}
       <AddTaskModal
