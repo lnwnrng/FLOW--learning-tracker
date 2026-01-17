@@ -50,7 +50,6 @@ const App: React.FC = () => {
   // Timer state - lifted from FocusTimer to persist across page navigation
   const [timerOrbState, setTimerOrbState] = useState<'idle' | 'forming' | 'running' | 'dissolving'>('idle');
   const [timerElapsedTime, setTimerElapsedTime] = useState(0);
-  const [timerSelectedTaskId, setTimerSelectedTaskId] = useState<string | null>(null);
   const timerIntervalRef = useRef<number | null>(null);
   const timerStartTimeRef = useRef<number | null>(null);
 
@@ -99,55 +98,48 @@ const App: React.FC = () => {
       setTimeout(() => {
         setTimerOrbState('idle');
         setTimerElapsedTime(0);
-        setTimerSelectedTaskId(null);
       }, 400);
     } else {
       setTimerOrbState('idle');
       setTimerElapsedTime(0);
-      setTimerSelectedTaskId(null);
     }
   }, [timerOrbState]);
 
   const handleTimerComplete = useCallback(() => {
     const duration = timerElapsedTime;
-    const taskId = timerSelectedTaskId;
     if (timerOrbState === 'running') {
       setTimerOrbState('dissolving');
       setTimeout(() => {
         setTimerOrbState('idle');
         if (duration > 0) {
-          console.log('Session completed:', duration, 'seconds, task:', taskId);
+          console.log('Session completed:', duration, 'seconds');
         }
         setTimerElapsedTime(0);
-        setTimerSelectedTaskId(null);
       }, 400);
     } else {
       if (duration > 0) {
-        console.log('Session completed:', duration, 'seconds, task:', taskId);
+        console.log('Session completed:', duration, 'seconds');
       }
       setTimerElapsedTime(0);
-      setTimerSelectedTaskId(null);
     }
-  }, [timerOrbState, timerElapsedTime, timerSelectedTaskId]);
+  }, [timerOrbState, timerElapsedTime]);
 
   // Filter tasks for selected date
   const tasksForSelectedDate = tasks.filter(task => {
     const taskDate = task.date;
-    const selected = selectedDate.toISOString().split('T')[0];
+    // Use local date components to avoid timezone issues with toISOString()
+    const year = selectedDate.getFullYear();
+    const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+    const day = String(selectedDate.getDate()).padStart(2, '0');
+    const selected = `${year}-${month}-${day}`;
     return taskDate === selected;
   });
 
-  // Get calendar events from tasks (for current month)
-  const calendarEvents = tasks
-    .filter(task => {
-      const taskDate = new Date(task.date);
-      return taskDate.getMonth() === selectedDate.getMonth() &&
-        taskDate.getFullYear() === selectedDate.getFullYear();
-    })
-    .map(task => ({
-      date: new Date(task.date).getDate(),
-      color: categoryDotColors[task.category],
-    }));
+  // Get calendar events from all tasks (using date string format)
+  const calendarEvents = tasks.map(task => ({
+    date: task.date, // Already in YYYY-MM-DD format
+    color: categoryDotColors[task.category],
+  }));
 
   const handleAddTask = (taskData: Omit<Task, 'id' | 'completed'>) => {
     const newTask: Task = {
@@ -194,16 +186,13 @@ const App: React.FC = () => {
       case Tab.FOCUS:
         return (
           <FocusTimer
-            tasks={tasksForSelectedDate}
             todayFocusTime={3600}
             orbState={timerOrbState}
             elapsedTime={timerElapsedTime}
-            selectedTaskId={timerSelectedTaskId}
             onStart={handleTimerStart}
             onPause={handleTimerPause}
             onReset={handleTimerReset}
             onComplete={handleTimerComplete}
-            onSelectTask={setTimerSelectedTaskId}
           />
         );
 

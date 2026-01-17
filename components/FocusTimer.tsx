@@ -1,36 +1,352 @@
-import React from 'react';
-import { Clock, Calendar, CheckCircle2, RotateCcw, X } from 'lucide-react';
-import { Task } from '../types';
+import React, { useState, useRef, useCallback } from 'react';
+import { Clock, CheckCircle2, RotateCcw, X } from 'lucide-react';
 
 type OrbState = 'idle' | 'forming' | 'running' | 'dissolving';
 
+// Long Press Button Component with circular progress ring
+interface LongPressButtonProps {
+    onComplete: () => void;
+    disabled?: boolean;
+    size?: number;
+    duration?: number;
+    icon: React.ReactNode;
+    title: string;
+    variant: 'reset' | 'danger';
+}
+
+const LongPressButton: React.FC<LongPressButtonProps> = ({
+    onComplete,
+    disabled = false,
+    size = 48,
+    duration = 1200,
+    icon,
+    title,
+    variant
+}) => {
+    const [progress, setProgress] = useState(0);
+    const [isHolding, setIsHolding] = useState(false);
+    const intervalRef = useRef<number | null>(null);
+    const startTimeRef = useRef<number>(0);
+
+    const getColors = () => {
+        if (variant === 'danger') {
+            return {
+                bgGradient: 'linear-gradient(135deg, rgba(254, 226, 226, 0.8), rgba(254, 202, 202, 0.6))',
+                border: '1px solid rgba(252, 165, 165, 0.4)',
+                shadow: '0 4px 24px -4px rgba(239, 68, 68, 0.2), inset 0 1px 2px rgba(255,255,255,0.4)',
+                progressStroke: 'url(#dangerGradient)',
+                trackStroke: 'rgba(252, 165, 165, 0.3)',
+                holdBg: 'linear-gradient(135deg, rgba(254, 202, 202, 0.95), rgba(252, 165, 165, 0.85))',
+                holdShadow: '0 6px 28px -4px rgba(239, 68, 68, 0.35), inset 0 1px 2px rgba(255,255,255,0.5)'
+            };
+        }
+        return {
+            bgGradient: 'linear-gradient(135deg, rgba(241, 245, 249, 0.9), rgba(226, 232, 240, 0.7))',
+            border: '1px solid rgba(255, 255, 255, 0.6)',
+            shadow: '0 4px 20px -4px rgba(15, 23, 42, 0.1), inset 0 1px 2px rgba(255,255,255,0.6)',
+            progressStroke: 'url(#resetGradient)',
+            trackStroke: 'rgba(148, 163, 184, 0.3)',
+            holdBg: 'linear-gradient(135deg, rgba(226, 232, 240, 0.95), rgba(203, 213, 225, 0.85))',
+            holdShadow: '0 6px 28px -4px rgba(15, 23, 42, 0.2), inset 0 1px 2px rgba(255,255,255,0.7)'
+        };
+    };
+
+    const colors = getColors();
+    const strokeWidth = 3;
+    const radius = (size / 2) - strokeWidth - 4;
+    const circumference = 2 * Math.PI * radius;
+    const strokeDashoffset = circumference - (progress / 100) * circumference;
+
+    const startHolding = useCallback(() => {
+        if (disabled) return;
+        setIsHolding(true);
+        startTimeRef.current = Date.now();
+
+        intervalRef.current = window.setInterval(() => {
+            const elapsed = Date.now() - startTimeRef.current;
+            const newProgress = Math.min((elapsed / duration) * 100, 100);
+            setProgress(newProgress);
+
+            if (newProgress >= 100) {
+                stopHolding();
+                onComplete();
+            }
+        }, 16);
+    }, [disabled, duration, onComplete]);
+
+    const stopHolding = useCallback(() => {
+        setIsHolding(false);
+        setProgress(0);
+        if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+        }
+    }, []);
+
+    // Cleanup on unmount
+    React.useEffect(() => {
+        return () => {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+            }
+        };
+    }, []);
+
+    return (
+        <div className="relative" style={{ width: size + 16, height: size + 16 }}>
+            {/* SVG Progress Ring - Outside the button */}
+            <svg
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                    width: size + 16,
+                    height: size + 16,
+                    transform: 'rotate(-90deg)',
+                }}
+            >
+                <defs>
+                    <linearGradient id="dangerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#f87171" />
+                        <stop offset="100%" stopColor="#ef4444" />
+                    </linearGradient>
+                    <linearGradient id="resetGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#64748b" />
+                        <stop offset="100%" stopColor="#475569" />
+                    </linearGradient>
+                </defs>
+                {/* Track */}
+                <circle
+                    cx={(size + 16) / 2}
+                    cy={(size + 16) / 2}
+                    r={(size / 2) + 4}
+                    fill="none"
+                    stroke={colors.trackStroke}
+                    strokeWidth={strokeWidth}
+                    style={{
+                        opacity: isHolding ? 1 : 0,
+                        transition: 'opacity 0.2s ease'
+                    }}
+                />
+                {/* Progress */}
+                <circle
+                    cx={(size + 16) / 2}
+                    cy={(size + 16) / 2}
+                    r={(size / 2) + 4}
+                    fill="none"
+                    stroke={colors.progressStroke}
+                    strokeWidth={strokeWidth}
+                    strokeLinecap="round"
+                    style={{
+                        strokeDasharray: 2 * Math.PI * ((size / 2) + 4),
+                        strokeDashoffset: 2 * Math.PI * ((size / 2) + 4) - (progress / 100) * 2 * Math.PI * ((size / 2) + 4),
+                        transition: isHolding ? 'none' : 'stroke-dashoffset 0.3s ease',
+                        opacity: isHolding ? 1 : 0,
+                    }}
+                />
+            </svg>
+
+            {/* Button */}
+            <button
+                onMouseDown={startHolding}
+                onMouseUp={stopHolding}
+                onMouseLeave={stopHolding}
+                onTouchStart={startHolding}
+                onTouchEnd={stopHolding}
+                onTouchCancel={stopHolding}
+                disabled={disabled}
+                className={`
+                    absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
+                    group flex items-center justify-center
+                    transition-all duration-300 
+                    ${isHolding ? 'scale-95' : 'hover:scale-110'} 
+                    active:scale-95 disabled:opacity-50
+                `}
+                style={{
+                    width: size,
+                    height: size,
+                    borderRadius: '50%',
+                    background: isHolding ? colors.holdBg : colors.bgGradient,
+                    backdropFilter: 'blur(12px)',
+                    border: colors.border,
+                    boxShadow: isHolding ? colors.holdShadow : colors.shadow,
+                }}
+                title={`Hold to ${title}`}
+            >
+                {/* Icon */}
+                <div className={`relative z-10 transition-transform duration-500 ${isHolding ? '' : 'group-hover:rotate-180'}`}>
+                    {icon}
+                </div>
+            </button>
+        </div>
+    );
+};
+
+// Session End Confirmation Modal
+interface SessionEndModalProps {
+    isOpen: boolean;
+    elapsedTime: number;
+    onConfirm: () => void;
+    onCancel: () => void;
+}
+
+const SessionEndModal: React.FC<SessionEndModalProps> = ({
+    isOpen,
+    elapsedTime,
+    onConfirm,
+    onCancel,
+}) => {
+    const isValidSession = elapsedTime >= 60; // 1 minute minimum
+
+    const formatTime = (seconds: number) => {
+        const hrs = Math.floor(seconds / 3600);
+        const mins = Math.floor((seconds % 3600) / 60);
+        const secs = seconds % 60;
+
+        if (hrs > 0) {
+            return `${hrs}h ${mins}m ${secs}s`;
+        }
+        if (mins > 0) {
+            return `${mins}m ${secs}s`;
+        }
+        return `${secs}s`;
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ backgroundColor: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(8px)' }}
+            onClick={onCancel}
+        >
+            <div
+                className="relative w-full max-w-sm rounded-3xl p-6 animate-fade-in"
+                style={{
+                    background: isValidSession
+                        ? 'rgba(240, 253, 250, 0.65)'  // Emerald tinted glass
+                        : 'rgba(255, 251, 235, 0.65)', // Amber tinted glass
+                    backdropFilter: 'blur(24px) saturate(160%)',
+                    WebkitBackdropFilter: 'blur(24px) saturate(160%)',
+                    border: isValidSession
+                        ? '1px solid rgba(52, 211, 153, 0.25)'
+                        : '1px solid rgba(251, 191, 36, 0.25)',
+                    boxShadow: `
+                        0 25px 70px -30px rgba(15, 23, 42, 0.35),
+                        inset 0 1px 2px rgba(255, 255, 255, 0.4)
+                    `,
+                }}
+                onClick={(e) => e.stopPropagation()}
+            >
+
+                {/* Icon */}
+                <div className="flex justify-center mb-4">
+                    <div
+                        className="w-16 h-16 rounded-full flex items-center justify-center"
+                        style={{
+                            background: isValidSession
+                                ? 'linear-gradient(135deg, rgba(52, 211, 153, 0.15), rgba(16, 185, 129, 0.1))'
+                                : 'linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(245, 158, 11, 0.1))',
+                            border: isValidSession
+                                ? '2px solid rgba(52, 211, 153, 0.3)'
+                                : '2px solid rgba(251, 191, 36, 0.3)',
+                        }}
+                    >
+                        {isValidSession ? (
+                            <CheckCircle2 size={32} className="text-emerald-500" />
+                        ) : (
+                            <Clock size={32} className="text-amber-500" />
+                        )}
+                    </div>
+                </div>
+
+                {/* Title */}
+                <h3 className="text-xl font-bold text-center text-slate-800 mb-2">
+                    {isValidSession ? 'End Session?' : 'Session Too Short'}
+                </h3>
+
+                {/* Description */}
+                <p className="text-center text-slate-500 text-sm mb-4">
+                    {isValidSession
+                        ? 'Great focus! This session will be saved to your records.'
+                        : 'Sessions under 1 minute won\'t be recorded. Keep going!'}
+                </p>
+
+                {/* Time display */}
+                <div
+                    className="rounded-2xl p-4 mb-6"
+                    style={{
+                        background: 'rgba(241, 245, 249, 0.7)',
+                        border: '1px solid rgba(226, 232, 240, 0.8)',
+                    }}
+                >
+                    <p className="text-center text-xs text-slate-400 uppercase tracking-wider mb-1">
+                        Session Duration
+                    </p>
+                    <p className={`text-center text-3xl font-bold ${isValidSession ? 'text-emerald-600' : 'text-amber-600'}`}>
+                        {formatTime(elapsedTime)}
+                    </p>
+                    {!isValidSession && (
+                        <p className="text-center text-xs text-slate-400 mt-2">
+                            Need {formatTime(60 - elapsedTime)} more for valid session
+                        </p>
+                    )}
+                </div>
+
+                {/* Buttons */}
+                <div className="flex gap-3">
+                    <button
+                        onClick={onCancel}
+                        className="flex-1 py-3 px-4 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                        style={{
+                            background: 'rgba(241, 245, 249, 0.9)',
+                            border: '1px solid rgba(226, 232, 240, 0.8)',
+                            color: '#64748b',
+                        }}
+                    >
+                        {isValidSession ? 'Continue' : 'Keep Going'}
+                    </button>
+                    <button
+                        onClick={onConfirm}
+                        className="flex-1 py-3 px-4 rounded-xl font-semibold text-sm text-white transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                        style={{
+                            background: isValidSession
+                                ? 'linear-gradient(135deg, #10b981, #059669)'
+                                : 'linear-gradient(135deg, #f59e0b, #d97706)',
+                            boxShadow: isValidSession
+                                ? '0 4px 16px -4px rgba(16, 185, 129, 0.4)'
+                                : '0 4px 16px -4px rgba(245, 158, 11, 0.4)',
+                        }}
+                    >
+                        {isValidSession ? 'End & Save' : 'Discard'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 interface FocusTimerProps {
-    tasks?: Task[];
     todayFocusTime?: number;
     // Timer state from parent
     orbState: OrbState;
     elapsedTime: number;
-    selectedTaskId: string | null;
     // Timer controls from parent
     onStart: () => void;
     onPause: () => void;
     onReset: () => void;
     onComplete: () => void;
-    onSelectTask: (taskId: string | null) => void;
 }
 
 const FocusTimer: React.FC<FocusTimerProps> = ({
-    tasks = [],
     todayFocusTime = 0,
     orbState,
     elapsedTime,
-    selectedTaskId,
     onStart,
     onPause,
     onReset,
     onComplete,
-    onSelectTask,
 }) => {
+    const [showEndModal, setShowEndModal] = useState(false);
+
     const isRunning = orbState === 'running';
     const isActive = orbState === 'running' || orbState === 'forming';
 
@@ -70,8 +386,7 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
         // If in transition, do nothing
     };
 
-    const selectedTask = tasks.find(t => t.id === selectedTaskId);
-    const incompleteTasks = tasks.filter(t => !t.completed);
+
 
     // Determine CSS class for orb state
     const getOrbClass = () => {
@@ -220,95 +535,29 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
                         </div>
                     </button>
                 </div>
-
-                {/* Selected Task Badge */}
-                {selectedTask && (
-                    <div className="mt-8 px-5 py-2.5 glass-card-light rounded-2xl ring-1 ring-white/20 flex items-center gap-3 max-w-xs">
-                        <div className="w-6 h-6 rounded-lg bg-emerald-500/15 flex items-center justify-center">
-                            <CheckCircle2 size={14} className="text-emerald-500" />
-                        </div>
-                        <span className="text-sm font-medium text-slate-700 truncate">
-                            {selectedTask.title}
-                        </span>
-                    </div>
-                )}
             </div>
 
-            {/* Bottom Controls Area - Fixed height to prevent layout shift */}
-            <div style={{ minHeight: '140px' }} className="flex flex-col items-center">
-                {/* Task Selection */}
-                {orbState === 'idle' && incompleteTasks.length > 0 && elapsedTime === 0 && (
-                    <div className="mb-4 w-full">
-                        <p className="text-sm font-medium text-slate-500 mb-3 flex items-center gap-2">
-                            <Calendar size={14} />
-                            Link to a task (optional)
-                        </p>
-                        <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 no-scrollbar">
-                            {incompleteTasks.slice(0, 5).map(task => (
-                                <button
-                                    key={task.id}
-                                    onClick={() => onSelectTask(
-                                        selectedTaskId === task.id ? null : task.id
-                                    )}
-                                    className={`
-                                        flex-shrink-0 px-4 py-2.5 rounded-xl text-sm font-medium
-                                        transition-all duration-300
-                                        ${selectedTaskId === task.id
-                                            ? 'bg-gradient-to-r from-sky-500 to-violet-500 text-white shadow-lg shadow-sky-500/20'
-                                            : 'glass-card-light text-slate-600 hover:ring-2 hover:ring-sky-300/40'
-                                        }
-                                    `}
-                                >
-                                    {task.title.length > 20 ? task.title.slice(0, 20) + '...' : task.title}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
+            {/* Bottom Controls Area */}
+            <div className="flex flex-col items-center">
                 {/* Controls - Only show when timer has time or is running */}
                 {(isRunning || elapsedTime > 0) && (
-                    <div className="flex items-center justify-center gap-4">
-                        {/* Reset Button */}
-                        <button
-                            onClick={onReset}
+                    <div className="flex items-center justify-center pb-2">
+                        {/* End Session Button - Long Press */}
+                        <LongPressButton
+                            onComplete={() => setShowEndModal(true)}
                             disabled={orbState === 'forming' || orbState === 'dissolving'}
-                            className="group relative w-12 h-12 rounded-full flex items-center justify-center
-                                transition-all duration-300 hover:scale-110 active:scale-95 disabled:opacity-50"
-                            style={{
-                                background: 'linear-gradient(135deg, rgba(241, 245, 249, 0.9), rgba(226, 232, 240, 0.7))',
-                                backdropFilter: 'blur(12px)',
-                                border: '1px solid rgba(255, 255, 255, 0.6)',
-                                boxShadow: '0 4px 20px -4px rgba(15, 23, 42, 0.1), inset 0 1px 2px rgba(255,255,255,0.6)'
-                            }}
-                            title="Reset"
-                        >
-                            <RotateCcw
-                                size={20}
-                                className="text-slate-500 group-hover:text-slate-700 transition-all duration-500 group-hover:-rotate-180"
-                            />
-                        </button>
-
-                        {/* Complete/End Session Button */}
-                        <button
-                            onClick={onComplete}
-                            disabled={orbState === 'forming' || orbState === 'dissolving'}
-                            className="group relative w-14 h-14 rounded-full flex items-center justify-center
-                                transition-all duration-300 hover:scale-110 active:scale-95 disabled:opacity-50"
-                            style={{
-                                background: 'linear-gradient(135deg, rgba(254, 226, 226, 0.8), rgba(254, 202, 202, 0.6))',
-                                backdropFilter: 'blur(12px)',
-                                border: '1px solid rgba(252, 165, 165, 0.4)',
-                                boxShadow: '0 4px 24px -4px rgba(239, 68, 68, 0.2), inset 0 1px 2px rgba(255,255,255,0.4)'
-                            }}
+                            size={56}
+                            duration={1200}
+                            variant="danger"
                             title="End Session"
-                        >
-                            <X
-                                size={24}
-                                className="text-rose-400 group-hover:text-rose-500 transition-colors duration-300"
-                                strokeWidth={2.5}
-                            />
-                        </button>
+                            icon={
+                                <X
+                                    size={24}
+                                    className="text-rose-400"
+                                    strokeWidth={2.5}
+                                />
+                            }
+                        />
                     </div>
                 )}
 
@@ -326,6 +575,17 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
                     }
                 </p>
             </div>
+
+            {/* Session End Confirmation Modal */}
+            <SessionEndModal
+                isOpen={showEndModal}
+                elapsedTime={elapsedTime}
+                onConfirm={() => {
+                    setShowEndModal(false);
+                    onComplete();
+                }}
+                onCancel={() => setShowEndModal(false)}
+            />
         </div>
     );
 };

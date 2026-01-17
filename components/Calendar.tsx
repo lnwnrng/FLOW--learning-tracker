@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface CalendarEvent {
-  date: number;
+  date: string; // YYYY-MM-DD format to match task date
   color: string; // Tailwind color class like 'bg-violet-400'
 }
 
@@ -75,8 +75,13 @@ const Calendar: React.FC<CalendarProps> = ({
     return selectedDate ? date.toDateString() === selectedDate.toDateString() : isToday(date);
   };
 
-  const getEventForDate = (dayOfMonth: number) => {
-    return events.find(e => e.date === dayOfMonth);
+  // Find event for a specific date using YYYY-MM-DD format
+  const getEventForDate = (fullDate: Date) => {
+    const year = fullDate.getFullYear();
+    const month = String(fullDate.getMonth() + 1).padStart(2, '0');
+    const day = String(fullDate.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
+    return events.find(e => e.date === dateStr);
   };
 
   const goToPrevMonth = () => {
@@ -135,8 +140,8 @@ const Calendar: React.FC<CalendarProps> = ({
       {/* Days Grid */}
       <div className="grid grid-cols-7 gap-y-0.5">
         {calendarDays.map((day, index) => {
-          const event = day.isCurrentMonth ? getEventForDate(day.date) : null;
-          const selected = day.isCurrentMonth && isSelected(day.fullDate);
+          const event = getEventForDate(day.fullDate);
+          const selected = isSelected(day.fullDate);
 
           return (
             <div key={index} className="flex flex-col items-center justify-center py-1.5">

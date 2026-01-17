@@ -139,18 +139,20 @@ const HomePage: React.FC<HomePageProps> = ({
                     <p className="text-slate-500 font-medium mt-1">{dateString}</p>
                 </div>
 
-                {/* Rainbow Ring Avatar */}
-                <div className="relative">
-                    <div className="w-14 h-14 rounded-full p-[3px] rainbow-ring">
+                {/* Rainbow Ring Avatar with hover rotation */}
+                <div className="relative group cursor-pointer">
+                    <div
+                        className="w-14 h-14 rounded-full p-[3px] rainbow-ring transition-transform duration-500 group-hover:rotate-180"
+                    >
                         <div className="w-full h-full rounded-full bg-white p-[2px] overflow-hidden">
                             {userAvatar ? (
                                 <img
                                     src={userAvatar}
                                     alt={userName}
-                                    className="w-full h-full rounded-full object-cover"
+                                    className="w-full h-full rounded-full object-cover transition-transform duration-500 group-hover:-rotate-180"
                                 />
                             ) : (
-                                <div className="w-full h-full rounded-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">
+                                <div className="w-full h-full rounded-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center transition-transform duration-500 group-hover:-rotate-180">
                                     <span className="text-lg font-bold text-slate-400">
                                         {userName.charAt(0).toUpperCase()}
                                     </span>

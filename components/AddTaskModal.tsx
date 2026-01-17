@@ -55,7 +55,11 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
     const handleSave = () => {
         if (!title.trim()) return;
 
-        const dateStr = selectedDate.toISOString().split('T')[0];
+        // Use local date components to avoid timezone issues with toISOString()
+        const year = selectedDate.getFullYear();
+        const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+        const day = String(selectedDate.getDate()).padStart(2, '0');
+        const dateStr = `${year}-${month}-${day}`;
 
         onSave({
             title: title.trim(),
