@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Clock, Calendar, Bell, CheckSquare } from 'lucide-react';
 import { Task } from '../types';
+import { useToast } from './ToastNotification';
 
 interface AddTaskModalProps {
     isOpen: boolean;
@@ -49,6 +50,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
     const [category, setCategory] = useState<Task['category']>('To Do');
     const [startTime, setStartTime] = useState('09:00');
     const [endTime, setEndTime] = useState('10:00');
+    const { showToast } = useToast();
 
     const selectedCategoryInfo = categories.find(c => c.id === category);
 
@@ -75,6 +77,13 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
         setStartTime('09:00');
         setEndTime('10:00');
         onClose();
+
+        // Show success toast
+        showToast({
+            type: 'success',
+            title: 'Task Created',
+            message: `"${title.trim()}" added to your schedule.`,
+        });
     };
 
     if (!isOpen) return null;

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Clock, CheckCircle2, RotateCcw, X } from 'lucide-react';
+import { useToast } from './ToastNotification';
 
 type OrbState = 'idle' | 'forming' | 'running' | 'dissolving';
 
@@ -346,6 +347,7 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
     onComplete,
 }) => {
     const [showEndModal, setShowEndModal] = useState(false);
+    const { showToast } = useToast();
 
     const isRunning = orbState === 'running';
     const isActive = orbState === 'running' || orbState === 'forming';
@@ -581,8 +583,26 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
                 isOpen={showEndModal}
                 elapsedTime={elapsedTime}
                 onConfirm={() => {
+                    const isValidSession = elapsedTime >= 60;
                     setShowEndModal(false);
                     onComplete();
+
+                    // Show toast notification
+                    if (isValidSession) {
+                        const mins = Math.floor(elapsedTime / 60);
+                        const secs = elapsedTime % 60;
+                        showToast({
+                            type: 'success',
+                            title: 'Session Saved',
+                            message: `Great focus! ${mins}m ${secs}s recorded.`,
+                        });
+                    } else {
+                        showToast({
+                            type: 'info',
+                            title: 'Session Discarded',
+                            message: 'Sessions under 1 minute are not recorded.',
+                        });
+                    }
                 }}
                 onCancel={() => setShowEndModal(false)}
             />

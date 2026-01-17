@@ -10,6 +10,8 @@ import HomePage from './components/HomePage';
 import AchievementsPage from './components/AchievementsPage';
 import PremiumPage from './components/PremiumPage';
 import SettingsPage from './components/SettingsPage';
+import { ToastProvider, useToast } from './components/ToastNotification';
+import PremiumSuccessModal from './components/PremiumSuccessModal';
 import { Tab, Task, User, UserStats } from './types';
 
 // Category to color mapping for calendar dots
@@ -46,6 +48,7 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User>(defaultUser);
   const [stats] = useState<UserStats>(defaultStats);
   const [subPage, setSubPage] = useState<'achievements' | 'settings' | 'premium' | null>(null);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
 
   // Timer state - lifted from FocusTimer to persist across page navigation
   const [timerOrbState, setTimerOrbState] = useState<'idle' | 'forming' | 'running' | 'dissolving'>('idle');
@@ -105,20 +108,47 @@ const App: React.FC = () => {
     }
   }, [timerOrbState]);
 
-  const handleTimerComplete = useCallback(() => {
+  // Timer complete handler - will be replaced by inner component with toast access
+  const handleTimerComplete = useCallback((showToast?: (toast: { type: 'success' | 'info'; title: string; message?: string }) => void) => {
     const duration = timerElapsedTime;
+    const isValidSession = duration >= 60;
+
     if (timerOrbState === 'running') {
       setTimerOrbState('dissolving');
       setTimeout(() => {
         setTimerOrbState('idle');
-        if (duration > 0) {
-          console.log('Session completed:', duration, 'seconds');
+        if (isValidSession && showToast) {
+          const mins = Math.floor(duration / 60);
+          const secs = duration % 60;
+          showToast({
+            type: 'success',
+            title: 'Session Saved',
+            message: `Great focus! ${mins}m ${secs}s recorded.`,
+          });
+        } else if (!isValidSession && showToast) {
+          showToast({
+            type: 'info',
+            title: 'Session Discarded',
+            message: 'Sessions under 1 minute are not recorded.',
+          });
         }
         setTimerElapsedTime(0);
       }, 400);
     } else {
-      if (duration > 0) {
-        console.log('Session completed:', duration, 'seconds');
+      if (isValidSession && showToast) {
+        const mins = Math.floor(duration / 60);
+        const secs = duration % 60;
+        showToast({
+          type: 'success',
+          title: 'Session Saved',
+          message: `Great focus! ${mins}m ${secs}s recorded.`,
+        });
+      } else if (!isValidSession && showToast) {
+        showToast({
+          type: 'info',
+          title: 'Session Discarded',
+          message: 'Sessions under 1 minute are not recorded.',
+        });
       }
       setTimerElapsedTime(0);
     }
@@ -221,6 +251,7 @@ const App: React.FC = () => {
               onUpgrade={() => {
                 setUser(prev => ({ ...prev, isPremium: true }));
                 setSubPage(null);
+                setShowPremiumModal(true);
               }}
             />
           );
@@ -300,9 +331,22 @@ const App: React.FC = () => {
         onSave={handleAddTask}
         selectedDate={selectedDate}
       />
+
+      {/* Premium Success Modal */}
+      <PremiumSuccessModal
+        isOpen={showPremiumModal}
+        onClose={() => setShowPremiumModal(false)}
+      />
     </div>
   );
 };
+
+// Wrapper component to provide toast context
+const AppWithProviders: React.FC = () => (
+  <ToastProvider>
+    <App />
+  </ToastProvider>
+);
 
 // Simple placeholder for other tabs
 const Placeholder: React.FC<{ title: string; subtitle: string }> = ({ title, subtitle }) => (
@@ -315,4 +359,4 @@ const Placeholder: React.FC<{ title: string; subtitle: string }> = ({ title, sub
   </div>
 );
 
-export default App;
+export default AppWithProviders;
