@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import {
     Flame,
     TrendingUp,
@@ -8,54 +8,48 @@ import {
     ChevronLeft,
     ChevronRight
 } from 'lucide-react';
+import { useSessionStore, useUserStore } from '../stores';
 
-interface HeatmapData {
+interface HeatmapDataItem {
     date: string; // YYYY-MM-DD
     value: number; // minutes of focus time
 }
 
-interface StatsPageProps {
-    heatmapData?: HeatmapData[];
-    totalFocusTime?: number;
-    currentStreak?: number;
-    longestStreak?: number;
-    totalSessions?: number;
-    averageSessionTime?: number;
-}
+const StatsPage: React.FC = () => {
+    const { user } = useUserStore();
+    const {
+        heatmapData: storeHeatmapData,
+        userStats,
+        fetchHeatmapData,
+        fetchUserStats
+    } = useSessionStore();
 
-// Generate mock data for demonstration
-const generateMockData = (): HeatmapData[] => {
-    const data: HeatmapData[] = [];
-    const today = new Date();
-
-    for (let i = 365; i >= 0; i--) {
-        const date = new Date(today);
-        date.setDate(date.getDate() - i);
-        const dateStr = date.toISOString().split('T')[0];
-
-        // Random value with some patterns
-        const dayOfWeek = date.getDay();
-        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-        const baseChance = isWeekend ? 0.4 : 0.7;
-
-        if (Math.random() < baseChance) {
-            const value = Math.floor(Math.random() * 180) + 15; // 15-195 minutes
-            data.push({ date: dateStr, value });
-        }
-    }
-
-    return data;
-};
-
-const StatsPage: React.FC<StatsPageProps> = ({
-    heatmapData = generateMockData(),
-    totalFocusTime = 12450,
-    currentStreak = 7,
-    longestStreak = 23,
-    totalSessions = 186,
-    averageSessionTime = 45,
-}) => {
     const [selectedYear, setSelectedYear] = React.useState(new Date().getFullYear());
+
+    // Fetch data on mount
+    useEffect(() => {
+        if (user) {
+            fetchHeatmapData();
+            fetchUserStats();
+        }
+    }, [user, fetchHeatmapData, fetchUserStats]);
+
+    // Convert store data to component format
+    const heatmapData: HeatmapDataItem[] = useMemo(() => {
+        return storeHeatmapData.map(d => ({
+            date: d.date,
+            value: d.value, // Already in minutes from backend
+        }));
+    }, [storeHeatmapData]);
+
+    // Stats from store with defaults
+    const totalFocusTime = userStats ? Math.round(userStats.totalFocusTime / 60) : 0; // Convert seconds to minutes
+    const currentStreak = userStats?.currentStreak ?? 0;
+    const longestStreak = userStats?.longestStreak ?? 0;
+    const totalSessions = userStats?.totalSessions ?? 0;
+    const averageSessionTime = totalSessions > 0
+        ? Math.round(totalFocusTime / totalSessions)
+        : 0;
 
     // Process heatmap data
     const { weeks, months, maxValue } = useMemo(() => {

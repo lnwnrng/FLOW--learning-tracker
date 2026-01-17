@@ -1,5 +1,8 @@
-import React from 'react';
-import { ArrowLeft, Trophy, Star, Flame, Target, Clock, Zap, Award } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { ArrowLeft, Trophy, Star, Flame, Target, Clock, Zap, Award, Moon, Sun } from 'lucide-react';
+import { useUserStore, useSessionStore } from '../stores';
+import { getAchievements } from '../services/achievementService';
+import type { AchievementInfo, AchievementType } from '../types';
 
 interface AchievementsPageProps {
     onBack: () => void;
@@ -10,99 +13,124 @@ interface AchievementsPageProps {
     tasksCompleted?: number;
 }
 
-interface Achievement {
-    id: string;
-    title: string;
-    description: string;
+// Map achievement types to icons and colors
+const achievementConfig: Record<AchievementType, {
     icon: React.ElementType;
     color: string;
-    progress: number;
-    target: number;
-    unlocked: boolean;
-}
+    title: string;
+}> = {
+    'first_session': { icon: Zap, color: 'from-amber-400 to-yellow-500', title: 'First Flow' },
+    'hour_master': { icon: Clock, color: 'from-indigo-400 to-purple-500', title: 'Hour Master' },
+    'streak_week': { icon: Flame, color: 'from-orange-400 to-red-500', title: 'Week Warrior' },
+    'streak_month': { icon: Star, color: 'from-violet-400 to-purple-500', title: 'Monthly Champion' },
+    'total_hours_10': { icon: Clock, color: 'from-sky-400 to-blue-500', title: '10 Hours Club' },
+    'total_hours_50': { icon: Trophy, color: 'from-emerald-400 to-green-500', title: '50 Hours Legend' },
+    'total_hours_100': { icon: Trophy, color: 'from-amber-500 to-orange-600', title: 'Century Master' },
+    'early_bird': { icon: Sun, color: 'from-yellow-400 to-orange-500', title: 'Early Bird' },
+    'night_owl': { icon: Moon, color: 'from-indigo-500 to-purple-600', title: 'Night Owl' },
+    'task_master': { icon: Award, color: 'from-cyan-400 to-teal-500', title: 'Task Master' },
+};
 
 const AchievementsPage: React.FC<AchievementsPageProps> = ({
     onBack,
-    currentStreak = 7,
-    longestStreak = 23,
-    totalFocusTime = 1250,
-    totalSessions = 48,
-    tasksCompleted = 156,
+    currentStreak = 0,
+    longestStreak = 0,
+    totalFocusTime = 0,
+    totalSessions = 0,
+    tasksCompleted = 0,
 }) => {
-    const achievements: Achievement[] = [
-        {
-            id: 'first-focus',
-            title: 'First Flow',
-            description: 'Complete your first focus session',
-            icon: Zap,
-            color: 'from-amber-400 to-yellow-500',
-            progress: 1,
-            target: 1,
-            unlocked: true,
-        },
-        {
-            id: 'week-streak',
-            title: 'Week Warrior',
-            description: 'Maintain a 7-day streak',
-            icon: Flame,
-            color: 'from-orange-400 to-red-500',
-            progress: currentStreak,
-            target: 7,
-            unlocked: currentStreak >= 7,
-        },
-        {
-            id: 'month-streak',
-            title: 'Monthly Master',
-            description: 'Maintain a 30-day streak',
-            icon: Star,
-            color: 'from-violet-400 to-purple-500',
-            progress: longestStreak,
-            target: 30,
-            unlocked: longestStreak >= 30,
-        },
-        {
-            id: '10-hours',
-            title: 'Time Keeper',
-            description: 'Accumulate 10 hours of focus time',
-            icon: Clock,
-            color: 'from-sky-400 to-blue-500',
-            progress: Math.floor(totalFocusTime / 60),
-            target: 10,
-            unlocked: totalFocusTime >= 600,
-        },
-        {
-            id: '100-hours',
-            title: 'Century Club',
-            description: 'Accumulate 100 hours of focus time',
-            icon: Trophy,
-            color: 'from-emerald-400 to-green-500',
-            progress: Math.floor(totalFocusTime / 60),
-            target: 100,
-            unlocked: totalFocusTime >= 6000,
-        },
-        {
-            id: '50-sessions',
-            title: 'Session Sage',
-            description: 'Complete 50 focus sessions',
-            icon: Target,
-            color: 'from-pink-400 to-rose-500',
-            progress: totalSessions,
-            target: 50,
-            unlocked: totalSessions >= 50,
-        },
-        {
-            id: '100-tasks',
-            title: 'Task Terminator',
-            description: 'Complete 100 tasks',
-            icon: Award,
-            color: 'from-cyan-400 to-teal-500',
-            progress: tasksCompleted,
-            target: 100,
-            unlocked: tasksCompleted >= 100,
-        },
-    ];
+    const { user } = useUserStore();
+    const [achievements, setAchievements] = useState<AchievementInfo[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const unlockedCount = achievements.filter(a => a.unlocked).length;
+    // Fetch achievements from backend
+    useEffect(() => {
+        if (user) {
+            setIsLoading(true);
+            getAchievements(user.id)
+                .then(data => {
+                    setAchievements(data);
+                    setIsLoading(false);
+                })
+                .catch(err => {
+                    console.error('Failed to fetch achievements:', err);
+                    setIsLoading(false);
+                });
+        }
+    }, [user]);
+
+    // Build display data
+    const displayAchievements = achievements.map(a => {
+        const config = achievementConfig[a.achievementType] || {
+            icon: Trophy,
+            color: 'from-slate-400 to-slate-500',
+            title: a.name,
+        };
+
+        // Calculate progress for locked achievements
+        let progress = 0;
+        let target = 1;
+
+        switch (a.achievementType) {
+            case 'first_session':
+                progress = totalSessions > 0 ? 1 : 0;
+                target = 1;
+                break;
+            case 'streak_week':
+                progress = currentStreak;
+                target = 7;
+                break;
+            case 'streak_month':
+                progress = longestStreak;
+                target = 30;
+                break;
+            case 'total_hours_10':
+                progress = Math.floor(totalFocusTime / 60);
+                target = 10;
+                break;
+            case 'total_hours_50':
+                progress = Math.floor(totalFocusTime / 60);
+                target = 50;
+                break;
+            case 'total_hours_100':
+                progress = Math.floor(totalFocusTime / 60);
+                target = 100;
+                break;
+            case 'task_master':
+                progress = tasksCompleted;
+                target = 50;
+                break;
+            case 'hour_master':
+                progress = 0; // Would need max session duration
+                target = 60;
+                break;
+            default:
+                progress = a.unlocked ? 1 : 0;
+                target = 1;
+        }
+
+        return {
+            id: a.achievementType,
+            title: config.title,
+            description: a.description,
+            icon: config.icon,
+            color: config.color,
+            progress: a.unlocked ? target : progress,
+            target,
+            unlocked: a.unlocked,
+            unlockedAt: a.unlockedAt,
+        };
+    });
+
+    const unlockedCount = displayAchievements.filter(a => a.unlocked).length;
+
+    if (isLoading) {
+        return (
+            <div className="animate-fade-in flex items-center justify-center h-64">
+                <div className="animate-pulse text-slate-600">Loading achievements...</div>
+            </div>
+        );
+    }
 
     return (
         <div className="animate-fade-in space-y-6">
@@ -116,7 +144,7 @@ const AchievementsPage: React.FC<AchievementsPageProps> = ({
                 </button>
                 <div>
                     <h1 className="text-2xl font-bold text-slate-800">Achievements</h1>
-                    <p className="text-sm text-slate-500">{unlockedCount} of {achievements.length} unlocked</p>
+                    <p className="text-sm text-slate-500">{unlockedCount} of {displayAchievements.length} unlocked</p>
                 </div>
             </div>
 
@@ -132,7 +160,7 @@ const AchievementsPage: React.FC<AchievementsPageProps> = ({
                         <div className="mt-2 h-2 bg-slate-200 rounded-full overflow-hidden">
                             <div
                                 className="h-full bg-gradient-to-r from-amber-400 to-yellow-500 rounded-full transition-all duration-500"
-                                style={{ width: `${(unlockedCount / achievements.length) * 100}%` }}
+                                style={{ width: `${displayAchievements.length > 0 ? (unlockedCount / displayAchievements.length) * 100 : 0}%` }}
                             />
                         </div>
                     </div>
@@ -141,7 +169,7 @@ const AchievementsPage: React.FC<AchievementsPageProps> = ({
 
             {/* Achievements Grid */}
             <div className="space-y-3">
-                {achievements.map((achievement) => {
+                {displayAchievements.map((achievement) => {
                     const Icon = achievement.icon;
                     const progressPercent = Math.min((achievement.progress / achievement.target) * 100, 100);
 

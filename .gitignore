@@ -1,4 +1,4 @@
-# Logs
+# === Logs ===
 logs
 *.log
 npm-debug.log*
@@ -7,18 +7,86 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# === Dependencies ===
 node_modules
+.pnp
+.pnp.js
+
+# === Build outputs ===
 dist
 dist-ssr
+build
 *.local
 
-# Editor directories and files
+# === Rust/Cargo (Tauri backend) ===
+src-tauri/target/
+src-tauri/gen/schemas
+*.rlib
+*.dylib
+*.so
+*.dll
+
+# === SQLite Database ===
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# === Editor directories and files ===
 .vscode/*
 !.vscode/extensions.json
+!.vscode/settings.json
 .idea
+*.swp
+*.swo
 .DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+Thumbs.db
+
+# === Environment files ===
+.env
+.env.local
+.env.*.local
+
+# === Test and coverage ===
+coverage
+.nyc_output
+
+# === OS generated files ===
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
+
+# === IDE ===
+*.iml
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+
+# === Debug and temp files ===
+*.pdb
+build_log.txt
+build_log_utf8.txt
+*.bak
+*.tmp
+*.temp
+
+# === Tauri specific ===
+src-tauri/WixTools
+src-tauri/*.msi
+src-tauri/*.exe
+src-tauri/*.dmg
+src-tauri/*.AppImage
+src-tauri/*.deb
+src-tauri/*.apk
+src-tauri/*.aab

@@ -50,8 +50,8 @@ const SettingToggle: React.FC<SettingToggleProps> = ({
             <button
                 onClick={onToggle}
                 className={`relative w-14 h-8 rounded-full transition-all duration-300 ${enabled
-                        ? 'bg-gradient-to-r from-emerald-400 to-green-500'
-                        : 'bg-slate-200'
+                    ? 'bg-gradient-to-r from-emerald-400 to-green-500'
+                    : 'bg-slate-200'
                     }`}
             >
                 <div className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow-md transition-all duration-300 ${enabled ? 'left-7' : 'left-1'
@@ -248,3 +248,4 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onBack }) => {
 };
 
 export default SettingsPage;
+

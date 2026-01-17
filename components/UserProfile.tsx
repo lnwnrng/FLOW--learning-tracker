@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import {
     Camera,
     Edit3,
-    LogOut,
+    UserX,
     Trophy,
     Flame,
     Clock,
@@ -14,6 +14,7 @@ import {
     Settings
 } from 'lucide-react';
 import { User, UserStats } from '../types';
+import DeleteAccountModal from './DeleteAccountModal';
 
 interface UserProfileProps {
     user: User;
@@ -33,6 +34,8 @@ const UserProfile: React.FC<UserProfileProps> = ({
     const [isEditing, setIsEditing] = useState(false);
     const [editName, setEditName] = useState(user.name);
     const [editEmail, setEditEmail] = useState(user.email);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleSave = () => {
@@ -277,14 +280,35 @@ const UserProfile: React.FC<UserProfileProps> = ({
                 })}
             </div>
 
-            {/* Logout Button */}
+            {/* Delete Account Button */}
             <button
-                onClick={onLogout}
-                className="w-full flex items-center justify-center gap-2 p-4 glass-card-light rounded-2xl transition-colors ring-1 ring-white/10 hover:bg-white/20 text-slate-600 font-semibold"
+                onClick={() => setShowDeleteModal(true)}
+                className="w-full flex items-center justify-center gap-2 p-4 rounded-2xl transition-all ring-1 ring-red-200/50 hover:scale-[1.01] active:scale-[0.99] font-semibold"
+                style={{
+                    background: 'rgba(254, 242, 242, 0.7)',
+                    backdropFilter: 'blur(12px)',
+                    color: '#dc2626',
+                }}
             >
-                <LogOut size={20} />
-                Sign Out
+                <UserX size={20} />
+                Delete Account
             </button>
+
+            {/* Delete Account Modal */}
+            <DeleteAccountModal
+                isOpen={showDeleteModal}
+                onCancel={() => setShowDeleteModal(false)}
+                onConfirm={async () => {
+                    setIsDeleting(true);
+                    try {
+                        await onLogout();
+                    } finally {
+                        setIsDeleting(false);
+                        setShowDeleteModal(false);
+                    }
+                }}
+                isLoading={isDeleting}
+            />
         </div>
     );
 };
