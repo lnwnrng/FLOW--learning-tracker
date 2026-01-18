@@ -2,7 +2,6 @@ import React, { useState, useRef } from 'react';
 import {
     Camera,
     Edit3,
-    UserX,
     Trophy,
     Flame,
     Clock,
@@ -11,31 +10,33 @@ import {
     Crown,
     Check,
     X,
-    Settings
+    Settings,
+    LogOut
 } from 'lucide-react';
 import { User, UserStats } from '../types';
-import DeleteAccountModal from './DeleteAccountModal';
+import SignOutModal from './SignOutModal';
 
 interface UserProfileProps {
     user: User;
     stats: UserStats;
+    unseenAchievementsCount?: number;
     onUpdateUser: (user: Partial<User>) => void;
-    onLogout: () => void;
+    onSignOut: () => void;
     onNavigate?: (page: 'achievements' | 'settings' | 'premium') => void;
 }
 
 const UserProfile: React.FC<UserProfileProps> = ({
     user,
     stats,
+    unseenAchievementsCount = 0,
     onUpdateUser,
-    onLogout,
+    onSignOut,
     onNavigate
 }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [editName, setEditName] = useState(user.name);
-    const [editEmail, setEditEmail] = useState(user.email);
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const [isDeleting, setIsDeleting] = useState(false);
+    const [editEmail, setEditEmail] = useState(user.email ?? '');
+    const [showSignOutModal, setShowSignOutModal] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleSave = () => {
@@ -45,7 +46,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
 
     const handleCancel = () => {
         setEditName(user.name);
-        setEditEmail(user.email);
+        setEditEmail(user.email ?? '');
         setIsEditing(false);
     };
 
@@ -54,7 +55,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                onUpdateUser({ avatar: reader.result as string });
+                onUpdateUser({ avatarPath: reader.result as string });
             };
             reader.readAsDataURL(file);
         }
@@ -101,9 +102,19 @@ const UserProfile: React.FC<UserProfileProps> = ({
     ];
 
     const menuItems = [
-        { label: 'Achievements', icon: Trophy, badge: '3 new', action: 'achievements' as const },
+        {
+            label: 'Achievements',
+            icon: Trophy,
+            badge: unseenAchievementsCount > 0 ? `${unseenAchievementsCount} new` : undefined,
+            action: 'achievements' as const
+        },
         { label: 'Settings', icon: Settings, action: 'settings' as const },
-        { label: 'Upgrade to Premium', icon: Crown, highlight: true, action: 'premium' as const },
+        {
+            label: user.isPremium ? 'Premium Active' : 'Upgrade to Premium',
+            icon: Crown,
+            highlight: !user.isPremium,
+            action: 'premium' as const
+        },
     ];
 
     return (
@@ -132,9 +143,9 @@ const UserProfile: React.FC<UserProfileProps> = ({
                             background: 'conic-gradient(from 0deg, #f472b6, #c084fc, #60a5fa, #34d399, #fbbf24, #fb923c, #f472b6)',
                         }}>
                             <div className="w-full h-full rounded-full bg-white p-1 overflow-hidden">
-                                {user.avatar ? (
+                                {user.avatarPath ? (
                                     <img
-                                        src={user.avatar}
+                                        src={user.avatarPath}
                                         alt={user.name}
                                         className="w-full h-full rounded-full object-cover"
                                     />
@@ -207,7 +218,22 @@ const UserProfile: React.FC<UserProfileProps> = ({
                         </div>
                     ) : (
                         <>
-                            <h2 className="text-2xl font-bold text-white">{user.name}</h2>
+                            <div className="flex items-center justify-center gap-2">
+                                <h2 className="text-2xl font-bold text-white">{user.name}</h2>
+                                {user.isPremium && (
+                                    <span
+                                        className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold text-amber-50"
+                                        style={{
+                                            background: 'linear-gradient(135deg, rgba(252, 211, 77, 0.98), rgba(245, 158, 11, 0.98))',
+                                            border: '1px solid rgba(245, 158, 11, 0.75)',
+                                            boxShadow: '0 10px 24px -14px rgba(245, 158, 11, 0.9)',
+                                        }}
+                                    >
+                                        <Crown size={12} />
+                                        Premium
+                                    </span>
+                                )}
+                            </div>
                             <p className="text-white/70 text-sm mt-1">{user.email}</p>
                             <button
                                 onClick={() => setIsEditing(true)}
@@ -280,34 +306,28 @@ const UserProfile: React.FC<UserProfileProps> = ({
                 })}
             </div>
 
-            {/* Delete Account Button */}
+            {/* Sign Out Button */}
             <button
-                onClick={() => setShowDeleteModal(true)}
-                className="w-full flex items-center justify-center gap-2 p-4 rounded-2xl transition-all ring-1 ring-red-200/50 hover:scale-[1.01] active:scale-[0.99] font-semibold"
+                onClick={() => setShowSignOutModal(true)}
+                className="w-full flex items-center justify-center gap-2 p-4 rounded-2xl transition-all ring-1 ring-slate-200/50 hover:scale-[1.01] active:scale-[0.99] font-semibold"
                 style={{
-                    background: 'rgba(254, 242, 242, 0.7)',
+                    background: 'rgba(248, 250, 252, 0.8)',
                     backdropFilter: 'blur(12px)',
-                    color: '#dc2626',
+                    color: '#6366f1',
                 }}
             >
-                <UserX size={20} />
-                Delete Account
+                <LogOut size={20} />
+                Sign Out
             </button>
 
-            {/* Delete Account Modal */}
-            <DeleteAccountModal
-                isOpen={showDeleteModal}
-                onCancel={() => setShowDeleteModal(false)}
-                onConfirm={async () => {
-                    setIsDeleting(true);
-                    try {
-                        await onLogout();
-                    } finally {
-                        setIsDeleting(false);
-                        setShowDeleteModal(false);
-                    }
+            {/* Sign Out Modal */}
+            <SignOutModal
+                isOpen={showSignOutModal}
+                onCancel={() => setShowSignOutModal(false)}
+                onConfirm={() => {
+                    setShowSignOutModal(false);
+                    onSignOut();
                 }}
-                isLoading={isDeleting}
             />
         </div>
     );

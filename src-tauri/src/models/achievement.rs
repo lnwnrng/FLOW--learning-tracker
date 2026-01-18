@@ -90,6 +90,7 @@ impl AchievementType {
 
 /// Achievement model
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Achievement {
     pub id: String,
     pub user_id: String,
@@ -100,6 +101,7 @@ pub struct Achievement {
 
 /// Achievement info for display
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AchievementInfo {
     pub achievement_type: AchievementType,
     pub name: String,

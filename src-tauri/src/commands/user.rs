@@ -32,6 +32,39 @@ pub fn get_user(db: State<Database>) -> Result<Option<User>, String> {
     Ok(user)
 }
 
+/// Get all users (for profile selection)
+#[tauri::command]
+pub fn get_users(db: State<Database>) -> Result<Vec<User>, String> {
+    let conn = db.conn.lock().map_err(|e| e.to_string())?;
+
+    let mut stmt = conn
+        .prepare(
+            "SELECT id, name, email, avatar_path, join_date, is_premium, created_at, updated_at 
+             FROM users 
+             ORDER BY updated_at DESC",
+        )
+        .map_err(|e| e.to_string())?;
+
+    let users = stmt
+        .query_map([], |row| {
+            Ok(User {
+                id: row.get(0)?,
+                name: row.get(1)?,
+                email: row.get(2)?,
+                avatar_path: row.get(3)?,
+                join_date: row.get(4)?,
+                is_premium: row.get::<_, i32>(5)? == 1,
+                created_at: row.get(6)?,
+                updated_at: row.get(7)?,
+            })
+        })
+        .map_err(|e| e.to_string())?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())?;
+
+    Ok(users)
+}
+
 /// Create a new user
 #[tauri::command]
 pub fn create_user(db: State<Database>, request: CreateUserRequest) -> Result<User, String> {
@@ -85,6 +118,7 @@ pub fn update_user(db: State<Database>, user_id: String, request: UpdateUserRequ
     }
     if request.is_premium.is_some() {
         updates.push(format!("is_premium = ?{}", param_idx));
+        param_idx += 1;
     }
     
     let query = format!(

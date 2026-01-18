@@ -7,6 +7,7 @@ use tauri::State;
 
 /// Export data structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ExportData {
     pub version: String,
     pub exported_at: String,
@@ -19,6 +20,7 @@ pub struct ExportData {
 
 /// Import result
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ImportResult {
     pub success: bool,
     pub sessions_imported: i64,

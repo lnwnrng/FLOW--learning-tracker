@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Crown } from 'lucide-react';
 import Dock from './components/Dock';
 import Calendar from './components/Calendar';
 import TaskList from './components/TaskList';
@@ -12,9 +13,11 @@ import PremiumPage from './components/PremiumPage';
 import SettingsPage from './components/SettingsPage';
 import { ToastProvider, useToast } from './components/ToastNotification';
 import PremiumSuccessModal from './components/PremiumSuccessModal';
-import { Tab, Task, TaskCategory } from './types';
+import AchievementUnlockedModal from './components/AchievementUnlockedModal';
+import { Tab, Task, TaskCategory, AchievementType, User } from './types';
 import { useUserStore, useSessionStore, useTaskStore } from './stores';
-import { checkAndUnlockAchievements } from './services/achievementService';
+import { checkAndUnlockAchievements, getUnseenAchievementsCount } from './services/achievementService';
+import { getUsers } from './services/userService';
 
 // Category to color mapping for calendar dots
 const categoryDotColors: Record<TaskCategory, string> = {
@@ -23,10 +26,24 @@ const categoryDotColors: Record<TaskCategory, string> = {
   'Event': 'bg-violet-400',
 };
 
+const formatLocalDate = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 // Onboarding component for new users
-const OnboardingScreen: React.FC<{ onCreateUser: (name: string) => void; isLoading: boolean }> = ({
+const OnboardingScreen: React.FC<{
+  onCreateUser: (name: string) => void;
+  onSelectUser: (user: User) => void;
+  isLoading: boolean;
+  existingUsers: User[];
+}> = ({
   onCreateUser,
-  isLoading
+  onSelectUser,
+  isLoading,
+  existingUsers
 }) => {
   const [name, setName] = useState('');
 
@@ -85,6 +102,68 @@ const OnboardingScreen: React.FC<{ onCreateUser: (name: string) => void; isLoadi
               {isLoading ? 'Creating...' : 'Get Started'}
             </button>
           </form>
+
+          {existingUsers.length > 0 && (
+            <div className="mt-6 pt-6 border-t border-slate-200/70">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-sm font-semibold text-slate-700">Continue with an existing profile</h2>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                {existingUsers.map((existingUser) => (
+                  <button
+                    key={existingUser.id}
+                    onClick={() => onSelectUser(existingUser)}
+                    className="group relative rounded-2xl p-3 text-left transition-all duration-300 hover:scale-[1.02]"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.7)',
+                      border: '1px solid rgba(226, 232, 240, 0.8)',
+                      boxShadow: '0 10px 30px -20px rgba(15, 23, 42, 0.25)',
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 shrink-0 rounded-full bg-white/80 overflow-hidden flex items-center justify-center">
+                        {existingUser.avatarPath ? (
+                          <img
+                            src={existingUser.avatarPath}
+                            alt={existingUser.name}
+                            className="w-full h-full object-cover block"
+                          />
+                        ) : (
+                          <span className="text-sm font-semibold text-slate-500">
+                            {existingUser.name.charAt(0).toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-semibold text-slate-700 truncate flex-1">
+                            {existingUser.name}
+                          </p>
+                          {existingUser.isPremium && (
+                            <span
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold text-amber-800"
+                              style={{
+                                background: 'rgba(251, 191, 36, 0.18)',
+                                border: '1px solid rgba(251, 191, 36, 0.35)',
+                                backdropFilter: 'blur(6px)',
+                              }}
+                            >
+                              <Crown size={10} />
+                              Premium
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-slate-400 truncate">
+                          {existingUser.email || 'No email'}
+                        </p>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -97,16 +176,22 @@ const App: React.FC = () => {
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
   const [subPage, setSubPage] = useState<'achievements' | 'settings' | 'premium' | null>(null);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [showAchievementModal, setShowAchievementModal] = useState(false);
+  const [unlockedAchievements, setUnlockedAchievements] = useState<AchievementType[]>([]);
+  const [unseenAchievementsCount, setUnseenAchievementsCount] = useState(0);
+  const [existingUsers, setExistingUsers] = useState<User[]>([]);
 
   // Zustand stores
-  const { user, isLoading: userLoading, isInitialized, initialize, createUser, updateUser, logout } = useUserStore();
+  const { user, isLoading: userLoading, isInitialized, initialize, createUser, updateUser, signOut, setUser } = useUserStore();
   const {
     dailyStats,
     userStats,
     createSession,
     fetchDailyStats,
     fetchUserStats,
+    fetchHeatmapData,
     getTodayFocusSeconds,
+    getTodaySessionCount,
     getWeekData
   } = useSessionStore();
   const { tasks, fetchAllTasks, toggleTask, createTask } = useTaskStore();
@@ -120,10 +205,36 @@ const App: React.FC = () => {
 
   const isTimerRunning = timerOrbState === 'running';
 
+  const refreshUnseenAchievements = useCallback(async () => {
+    if (!user) return;
+    try {
+      const count = await getUnseenAchievementsCount(user.id);
+      setUnseenAchievementsCount(count);
+    } catch (error) {
+      console.error('Failed to fetch unseen achievements count:', error);
+    }
+  }, [user]);
+
+  const loadExistingUsers = useCallback(async () => {
+    try {
+      const users = await getUsers();
+      setExistingUsers(users);
+    } catch (error) {
+      console.error('Failed to load users:', error);
+      setExistingUsers([]);
+    }
+  }, []);
+
   // Initialize app - fetch user and data
   useEffect(() => {
     initialize();
   }, [initialize]);
+
+  useEffect(() => {
+    if (!user && isInitialized) {
+      loadExistingUsers();
+    }
+  }, [user, isInitialized, loadExistingUsers]);
 
   // Fetch data when user is available
   useEffect(() => {
@@ -132,14 +243,13 @@ const App: React.FC = () => {
       const weekAgo = new Date(today);
       weekAgo.setDate(weekAgo.getDate() - 7);
 
-      fetchDailyStats(
-        weekAgo.toISOString().split('T')[0],
-        today.toISOString().split('T')[0]
-      );
+      fetchDailyStats(formatLocalDate(weekAgo), formatLocalDate(today));
       fetchUserStats();
+      fetchHeatmapData();
       fetchAllTasks();
+      refreshUnseenAchievements();
     }
-  }, [user, fetchDailyStats, fetchUserStats, fetchAllTasks]);
+  }, [user, fetchDailyStats, fetchUserStats, fetchHeatmapData, fetchAllTasks, refreshUnseenAchievements]);
 
   // Timer interval logic - runs at App level so it persists
   useEffect(() => {
@@ -226,12 +336,10 @@ const App: React.FC = () => {
         // Check for new achievements
         try {
           const newAchievements = await checkAndUnlockAchievements(user.id);
-          if (newAchievements.length > 0 && showToast) {
-            showToast({
-              type: 'success',
-              title: 'Achievement Unlocked!',
-              message: `You earned: ${newAchievements.map(a => a.achievementType).join(', ')}`,
-            });
+          if (newAchievements.length > 0) {
+            setUnlockedAchievements(newAchievements.map(a => a.achievementType));
+            setShowAchievementModal(true);
+            refreshUnseenAchievements();
           }
         } catch (e) {
           console.error('Failed to check achievements:', e);
@@ -265,7 +373,7 @@ const App: React.FC = () => {
     }
 
     finishTimer();
-  }, [timerOrbState, timerElapsedTime, user, createSession]);
+  }, [timerOrbState, timerElapsedTime, user, createSession, refreshUnseenAchievements]);
 
   // Handle user creation
   const handleCreateUser = async (name: string) => {
@@ -274,6 +382,10 @@ const App: React.FC = () => {
     } catch (error) {
       console.error('Failed to create user:', error);
     }
+  };
+
+  const handleSelectUser = (selectedUser: User) => {
+    setUser(selectedUser);
   };
 
   // Filter tasks for selected date
@@ -309,24 +421,24 @@ const App: React.FC = () => {
   const handleToggleTask = async (taskId: string) => {
     try {
       await toggleTask(taskId);
+      if (user) {
+        const newAchievements = await checkAndUnlockAchievements(user.id);
+        if (newAchievements.length > 0) {
+          setUnlockedAchievements(newAchievements.map(a => a.achievementType));
+          setShowAchievementModal(true);
+          refreshUnseenAchievements();
+        }
+      }
     } catch (error) {
       console.error('Failed to toggle task:', error);
     }
   };
 
-  const handleUpdateUser = async (updates: Partial<{ name: string; email: string; isPremium: boolean }>) => {
+  const handleUpdateUser = async (updates: Partial<{ name: string; email: string; isPremium: boolean; avatarPath: string }>) => {
     try {
       await updateUser(updates);
     } catch (error) {
       console.error('Failed to update user:', error);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-    } catch (error) {
-      console.error('Failed to logout:', error);
     }
   };
 
@@ -341,11 +453,19 @@ const App: React.FC = () => {
 
   // Show onboarding if no user exists
   if (!user) {
-    return <OnboardingScreen onCreateUser={handleCreateUser} isLoading={userLoading} />;
+    return (
+      <OnboardingScreen
+        onCreateUser={handleCreateUser}
+        onSelectUser={handleSelectUser}
+        isLoading={userLoading}
+        existingUsers={existingUsers}
+      />
+    );
   }
 
   // Calculate stats for display
   const todayMinutes = Math.round(getTodayFocusSeconds() / 60);
+  const todaySessionCount = getTodaySessionCount();
   const weekData = getWeekData();
   const currentStreak = userStats?.currentStreak ?? 0;
   const longestStreak = userStats?.longestStreak ?? 0;
@@ -375,6 +495,7 @@ const App: React.FC = () => {
         return (
           <FocusTimer
             todayFocusTime={getTodayFocusSeconds()}
+            todaySessionCount={todaySessionCount}
             orbState={timerOrbState}
             elapsedTime={timerElapsedTime}
             onStart={handleTimerStart}
@@ -390,6 +511,7 @@ const App: React.FC = () => {
           return (
             <AchievementsPage
               onBack={() => setSubPage(null)}
+              onViewed={refreshUnseenAchievements}
               currentStreak={currentStreak}
               longestStreak={longestStreak}
               totalFocusTime={userStats?.totalFocusTime ? Math.round(userStats.totalFocusTime / 60) : 0}
@@ -416,14 +538,7 @@ const App: React.FC = () => {
         }
         return (
           <UserProfile
-            user={{
-              id: user.id,
-              name: user.name,
-              email: user.email || '',
-              avatar: user.avatarPath,
-              joinDate: user.joinDate,
-              isPremium: user.isPremium,
-            }}
+            user={user}
             stats={{
               totalFocusTime: userStats?.totalFocusTime ? Math.round(userStats.totalFocusTime / 60) : 0,
               totalSessions: userStats?.totalSessions ?? 0,
@@ -431,12 +546,14 @@ const App: React.FC = () => {
               longestStreak: longestStreak,
               tasksCompleted: userStats?.tasksCompleted ?? 0,
             }}
+            unseenAchievementsCount={unseenAchievementsCount}
             onUpdateUser={(updates) => handleUpdateUser({
               name: updates.name,
               email: updates.email,
               isPremium: updates.isPremium,
+              avatarPath: updates.avatarPath,
             })}
-            onLogout={handleLogout}
+            onSignOut={signOut}
             onNavigate={(page) => setSubPage(page)}
           />
         );
@@ -519,6 +636,21 @@ const App: React.FC = () => {
       <PremiumSuccessModal
         isOpen={showPremiumModal}
         onClose={() => setShowPremiumModal(false)}
+      />
+
+      {/* Achievement Unlocked Modal */}
+      <AchievementUnlockedModal
+        isOpen={showAchievementModal}
+        achievements={unlockedAchievements}
+        onClose={() => {
+          setShowAchievementModal(false);
+          setUnlockedAchievements([]);
+        }}
+        onView={() => {
+          setShowAchievementModal(false);
+          setUnlockedAchievements([]);
+          setSubPage('achievements');
+        }}
       />
     </div>
   );

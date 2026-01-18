@@ -31,9 +31,9 @@ pub fn create_focus_session(
     )
     .map_err(|e| e.to_string())?;
 
-    // Update daily stats
-    let session_date = &request.started_at[..10]; // Extract YYYY-MM-DD
-    update_daily_stats(&conn, &request.user_id, session_date, request.duration_seconds)?;
+    // Update daily stats (use local date based on session start)
+    let session_date = local_date_from_iso(&request.started_at)?;
+    update_daily_stats(&conn, &request.user_id, &session_date, request.duration_seconds)?;
 
     let session = FocusSession {
         id,
@@ -47,6 +47,19 @@ pub fn create_focus_session(
     };
 
     Ok(session)
+}
+
+fn local_date_from_iso(value: &str) -> Result<String, String> {
+    if let Ok(parsed) = chrono::DateTime::parse_from_rfc3339(value) {
+        let local = parsed.with_timezone(&chrono::Local);
+        return Ok(local.format("%Y-%m-%d").to_string());
+    }
+
+    if value.len() >= 10 {
+        return Ok(value[..10].to_string());
+    }
+
+    Err("Invalid session timestamp".to_string())
 }
 
 /// Update daily stats when a session is created
@@ -156,7 +169,7 @@ pub fn get_heatmap_data(db: State<Database>, user_id: String) -> Result<Vec<Heat
         .prepare(
             "SELECT date, total_focus_seconds / 60 as minutes 
              FROM daily_stats 
-             WHERE user_id = ?1 AND date >= date('now', '-365 days') 
+             WHERE user_id = ?1 AND date >= date('now', 'localtime', '-365 days') 
              ORDER BY date ASC",
         )
         .map_err(|e| e.to_string())?;

@@ -1,4 +1,4 @@
-use rusqlite::{Connection, Result};
+use rusqlite::{params, Connection, OptionalExtension, Result};
 use std::fs;
 use std::path::PathBuf;
 use tauri::{AppHandle, Manager};
@@ -41,26 +41,58 @@ fn run_migrations(conn: &Connection) -> Result<()> {
         [],
     )?;
     
-    // Check if initial migration has been applied
-    let migration_exists: bool = conn.query_row(
-        "SELECT EXISTS(SELECT 1 FROM _migrations WHERE name = '001_initial')",
-        [],
-        |row| row.get(0),
-    )?;
-    
-    if !migration_exists {
-        // Run initial migration
-        let migration_sql = include_str!("../../migrations/001_initial.sql");
-        conn.execute_batch(migration_sql)?;
-        
-        // Record migration
+    let migrations: Vec<(&str, &str)> = vec![
+        ("001_initial", include_str!("../../migrations/001_initial.sql")),
+        ("002_add_avatar_path", include_str!("../../migrations/002_add_avatar_path.sql")),
+        ("003_add_achievement_seen_at", include_str!("../../migrations/003_add_achievement_seen_at.sql")),
+    ];
+
+    for (name, sql) in migrations {
+        let migration_exists: bool = conn.query_row(
+            "SELECT EXISTS(SELECT 1 FROM _migrations WHERE name = ?1)",
+            params![name],
+            |row| row.get(0),
+        )?;
+
+        if migration_exists {
+            continue;
+        }
+
+        if name == "002_add_avatar_path" && has_column(conn, "users", "avatar_path")? {
+            conn.execute(
+                "INSERT INTO _migrations (name) VALUES (?1)",
+                params![name],
+            )?;
+            continue;
+        }
+
+        if name == "003_add_achievement_seen_at" && has_column(conn, "achievements", "seen_at")? {
+            conn.execute(
+                "INSERT INTO _migrations (name) VALUES (?1)",
+                params![name],
+            )?;
+            continue;
+        }
+
+        conn.execute_batch(sql)?;
         conn.execute(
-            "INSERT INTO _migrations (name) VALUES ('001_initial')",
-            [],
+            "INSERT INTO _migrations (name) VALUES (?1)",
+            params![name],
         )?;
     }
     
     Ok(())
+}
+
+fn has_column(conn: &Connection, table: &str, column: &str) -> Result<bool> {
+    let query = format!(
+        "SELECT 1 FROM pragma_table_info('{}') WHERE name = ?1 LIMIT 1",
+        table.replace('\'', "''")
+    );
+    let exists: Option<i32> = conn
+        .query_row(&query, params![column], |row| row.get(0))
+        .optional()?;
+    Ok(exists.is_some())
 }
 
 /// Database connection wrapper for thread-safe access

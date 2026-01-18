@@ -56,6 +56,38 @@ pub fn get_achievements(db: State<Database>, user_id: String) -> Result<Vec<Achi
     Ok(achievements)
 }
 
+/// Get count of unlocked achievements not yet viewed by user
+#[tauri::command]
+pub fn get_unseen_achievements_count(
+    db: State<Database>,
+    user_id: String,
+) -> Result<i64, String> {
+    let conn = db.conn.lock().map_err(|e| e.to_string())?;
+    let count: i64 = conn
+        .query_row(
+            "SELECT COUNT(*) FROM achievements WHERE user_id = ?1 AND seen_at IS NULL",
+            params![user_id],
+            |row| row.get(0),
+        )
+        .map_err(|e| e.to_string())?;
+    Ok(count)
+}
+
+/// Mark all unseen achievements as viewed
+#[tauri::command]
+pub fn mark_achievements_seen(db: State<Database>, user_id: String) -> Result<(), String> {
+    let conn = db.conn.lock().map_err(|e| e.to_string())?;
+    let now = chrono::Utc::now().format("%Y-%m-%d %H:%M:%S").to_string();
+
+    conn.execute(
+        "UPDATE achievements SET seen_at = ?1 WHERE user_id = ?2 AND seen_at IS NULL",
+        params![now, user_id],
+    )
+    .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
 /// Unlock a specific achievement
 #[tauri::command]
 pub fn unlock_achievement(
@@ -123,8 +155,8 @@ pub fn check_and_unlock_achievements(
         )
         .unwrap_or(0);
 
-    // Get current streak
-    let current_streak = calculate_current_streak(&conn, &user_id).unwrap_or(0);
+    // Get longest streak
+    let longest_streak = calculate_longest_streak(&conn, &user_id).unwrap_or(0);
 
     // Get max session duration
     let max_session_duration: i64 = conn
@@ -135,15 +167,21 @@ pub fn check_and_unlock_achievements(
         )
         .unwrap_or(0);
 
+    // Time-based achievements
+    let has_early_bird = has_early_bird_session(&conn, &user_id).unwrap_or(false);
+    let has_night_owl = has_night_owl_session(&conn, &user_id).unwrap_or(false);
+
     // Check each achievement
     let checks: Vec<(AchievementType, bool)> = vec![
         (AchievementType::FirstSession, total_sessions >= 1),
         (AchievementType::HourMaster, max_session_duration >= 3600),
-        (AchievementType::StreakWeek, current_streak >= 7),
-        (AchievementType::StreakMonth, current_streak >= 30),
+        (AchievementType::StreakWeek, longest_streak >= 7),
+        (AchievementType::StreakMonth, longest_streak >= 30),
         (AchievementType::TotalHours10, total_focus_time >= 36000),
         (AchievementType::TotalHours50, total_focus_time >= 180000),
         (AchievementType::TotalHours100, total_focus_time >= 360000),
+        (AchievementType::EarlyBird, has_early_bird),
+        (AchievementType::NightOwl, has_night_owl),
         (AchievementType::TaskMaster, tasks_completed >= 50),
     ];
 
@@ -168,6 +206,32 @@ fn is_achievement_unlocked(
     conn.query_row(
         "SELECT EXISTS(SELECT 1 FROM achievements WHERE user_id = ?1 AND achievement_type = ?2)",
         params![user_id, type_str],
+        |row| row.get(0),
+    )
+    .map_err(|e| e.to_string())
+}
+
+fn has_early_bird_session(conn: &rusqlite::Connection, user_id: &str) -> Result<bool, String> {
+    conn.query_row(
+        "SELECT EXISTS(
+            SELECT 1 FROM focus_sessions
+            WHERE user_id = ?1
+              AND CAST(strftime('%H', started_at, 'localtime') AS INTEGER) < 6
+        )",
+        params![user_id],
+        |row| row.get(0),
+    )
+    .map_err(|e| e.to_string())
+}
+
+fn has_night_owl_session(conn: &rusqlite::Connection, user_id: &str) -> Result<bool, String> {
+    conn.query_row(
+        "SELECT EXISTS(
+            SELECT 1 FROM focus_sessions
+            WHERE user_id = ?1
+              AND CAST(strftime('%H', ended_at, 'localtime') AS INTEGER) >= 23
+        )",
+        params![user_id],
         |row| row.get(0),
     )
     .map_err(|e| e.to_string())
@@ -198,14 +262,14 @@ fn unlock_achievement_internal(
     })
 }
 
-/// Calculate current streak (reused logic from session.rs)
-fn calculate_current_streak(conn: &rusqlite::Connection, user_id: &str) -> Result<i64, String> {
+/// Calculate longest streak (reused logic from session.rs)
+fn calculate_longest_streak(conn: &rusqlite::Connection, user_id: &str) -> Result<i64, String> {
     let dates: Vec<String> = {
         let mut stmt = conn
             .prepare(
                 "SELECT DISTINCT date FROM daily_stats 
                  WHERE user_id = ?1 AND total_focus_seconds > 0 
-                 ORDER BY date DESC",
+                 ORDER BY date ASC",
             )
             .map_err(|e| e.to_string())?;
 
@@ -220,28 +284,24 @@ fn calculate_current_streak(conn: &rusqlite::Connection, user_id: &str) -> Resul
         return Ok(0);
     }
 
-    let today = chrono::Utc::now().format("%Y-%m-%d").to_string();
-    let yesterday = (chrono::Utc::now() - chrono::Duration::days(1))
-        .format("%Y-%m-%d")
-        .to_string();
+    let mut longest = 1i64;
+    let mut current = 1i64;
 
-    if dates[0] != today && dates[0] != yesterday {
-        return Ok(0);
-    }
-
-    let mut streak = 1i64;
     for i in 1..dates.len() {
         let prev_date =
             chrono::NaiveDate::parse_from_str(&dates[i - 1], "%Y-%m-%d").map_err(|e| e.to_string())?;
         let curr_date =
             chrono::NaiveDate::parse_from_str(&dates[i], "%Y-%m-%d").map_err(|e| e.to_string())?;
 
-        if prev_date - curr_date == chrono::Duration::days(1) {
-            streak += 1;
+        if curr_date - prev_date == chrono::Duration::days(1) {
+            current += 1;
+            if current > longest {
+                longest = current;
+            }
         } else {
-            break;
+            current = 1;
         }
     }
 
-    Ok(streak)
+    Ok(longest)
 }

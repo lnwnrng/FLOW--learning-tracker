@@ -34,6 +34,18 @@ const StatsPage: React.FC = () => {
         }
     }, [user, fetchHeatmapData, fetchUserStats]);
 
+    const formatDateLocal = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
+    const parseLocalDate = (dateStr: string) => {
+        const [year, month, day] = dateStr.split('-').map(Number);
+        return new Date(year, (month ?? 1) - 1, day ?? 1);
+    };
+
     // Convert store data to component format
     const heatmapData: HeatmapDataItem[] = useMemo(() => {
         return storeHeatmapData.map(d => ({
@@ -68,7 +80,7 @@ const StatsPage: React.FC = () => {
 
         const currentDate = new Date(startDate);
         while (currentDate <= endDate || currentWeek.length > 0) {
-            const dateStr = currentDate.toISOString().split('T')[0];
+            const dateStr = formatDateLocal(currentDate);
             const value = dataMap.get(dateStr) || 0;
             maxVal = Math.max(maxVal, value);
 
@@ -91,13 +103,15 @@ const StatsPage: React.FC = () => {
         // Generate month labels
         const monthLabels: { name: string; week: number }[] = [];
         let lastMonth = -1;
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
         weeks.forEach((week, weekIndex) => {
             const firstDayOfWeek = week[0]?.date;
             if (firstDayOfWeek) {
                 const month = firstDayOfWeek.getMonth();
                 if (month !== lastMonth && firstDayOfWeek.getFullYear() === selectedYear) {
                     monthLabels.push({
-                        name: firstDayOfWeek.toLocaleString('en-US', { month: 'short' }),
+                        name: monthNames[month],
                         week: weekIndex,
                     });
                     lastMonth = month;
@@ -127,17 +141,19 @@ const StatsPage: React.FC = () => {
     };
 
     const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const todayStr = formatDateLocal(new Date());
 
     // Calculate this week and this month stats
     const thisWeekTime = useMemo(() => {
         const today = new Date();
         const startOfWeek = new Date(today);
         startOfWeek.setDate(today.getDate() - today.getDay());
+        const startOfWeekStr = formatDateLocal(startOfWeek);
+        const endOfWeekStr = formatDateLocal(today);
 
         return heatmapData
             .filter(d => {
-                const date = new Date(d.date);
-                return date >= startOfWeek && date <= today;
+                return d.date >= startOfWeekStr && d.date <= endOfWeekStr;
             })
             .reduce((sum, d) => sum + d.value, 0);
     }, [heatmapData]);
@@ -145,11 +161,12 @@ const StatsPage: React.FC = () => {
     const thisMonthTime = useMemo(() => {
         const today = new Date();
         const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        const startOfMonthStr = formatDateLocal(startOfMonth);
+        const endOfMonthStr = formatDateLocal(today);
 
         return heatmapData
             .filter(d => {
-                const date = new Date(d.date);
-                return date >= startOfMonth && date <= today;
+                return d.date >= startOfMonthStr && d.date <= endOfMonthStr;
             })
             .reduce((sum, d) => sum + d.value, 0);
     }, [heatmapData]);
@@ -294,7 +311,8 @@ const StatsPage: React.FC = () => {
                                 <div key={weekIndex} className="flex flex-col gap-0.5">
                                     {week.map((day, dayIndex) => {
                                         const isCurrentYear = day.date.getFullYear() === selectedYear;
-                                        const isFuture = day.date > new Date();
+                                        const dayStr = formatDateLocal(day.date);
+                                        const isFuture = dayStr > todayStr;
 
                                         return (
                                             <div
@@ -304,7 +322,7 @@ const StatsPage: React.FC = () => {
                                                     ${!isCurrentYear || isFuture ? 'bg-transparent' : getColor(day.value)}
                                                     ${day.value > 0 ? 'cursor-pointer hover:ring-2 hover:ring-slate-300' : ''}
                                                 `}
-                                                title={isCurrentYear && !isFuture ? `${day.date.toLocaleDateString()}: ${formatTime(day.value)}` : ''}
+                                                title={isCurrentYear && !isFuture ? `${dayStr}: ${formatTime(day.value)}` : ''}
                                             />
                                         );
                                     })}
@@ -321,7 +339,7 @@ const StatsPage: React.FC = () => {
                 <div className="space-y-3">
                     {weekDays.map((day, index) => {
                         // Calculate average for this day of week
-                        const dayData = heatmapData.filter(d => new Date(d.date).getDay() === index);
+                        const dayData = heatmapData.filter(d => parseLocalDate(d.date).getDay() === index);
                         const avgMinutes = dayData.length > 0
                             ? Math.round(dayData.reduce((sum, d) => sum + d.value, 0) / dayData.length)
                             : 0;

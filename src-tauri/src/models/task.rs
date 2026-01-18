@@ -32,6 +32,7 @@ impl TaskCategory {
 
 /// Task model
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Task {
     pub id: String,
     pub user_id: String,
@@ -46,6 +47,7 @@ pub struct Task {
 
 /// Create task request
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CreateTaskRequest {
     pub user_id: String,
     pub title: String,
@@ -57,6 +59,7 @@ pub struct CreateTaskRequest {
 
 /// Update task request
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct UpdateTaskRequest {
     pub title: Option<String>,
     pub category: Option<TaskCategory>,

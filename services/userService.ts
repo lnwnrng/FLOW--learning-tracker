@@ -9,6 +9,13 @@ export async function getUser(): Promise<User | null> {
 }
 
 /**
+ * Get all users
+ */
+export async function getUsers(): Promise<User[]> {
+    return await invoke<User[]>('get_users');
+}
+
+/**
  * Create a new user
  */
 export async function createUser(request: CreateUserRequest): Promise<User> {
@@ -20,11 +27,4 @@ export async function createUser(request: CreateUserRequest): Promise<User> {
  */
 export async function updateUser(userId: string, request: UpdateUserRequest): Promise<User> {
     return await invoke<User>('update_user', { userId, request });
-}
-
-/**
- * Delete user and all associated data (for logout)
- */
-export async function deleteUser(userId: string): Promise<void> {
-    return await invoke<void>('delete_user', { userId });
 }

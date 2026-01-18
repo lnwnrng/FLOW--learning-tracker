@@ -327,6 +327,7 @@ const SessionEndModal: React.FC<SessionEndModalProps> = ({
 
 interface FocusTimerProps {
     todayFocusTime?: number;
+    todaySessionCount?: number;
     // Timer state from parent
     orbState: OrbState;
     elapsedTime: number;
@@ -339,6 +340,7 @@ interface FocusTimerProps {
 
 const FocusTimer: React.FC<FocusTimerProps> = ({
     todayFocusTime = 0,
+    todaySessionCount = 0,
     orbState,
     elapsedTime,
     onStart,
@@ -426,7 +428,7 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
                         <p className="text-xs text-slate-500 mb-1">Sessions</p>
                         <div className="flex items-center gap-1.5 justify-end">
                             <div className="w-3 h-3 rounded-full bg-gradient-to-br from-amber-400 to-orange-500" />
-                            <span className="text-lg font-bold text-slate-700">3</span>
+                            <span className="text-lg font-bold text-slate-700">{todaySessionCount}</span>
                         </div>
                     </div>
                 </div>

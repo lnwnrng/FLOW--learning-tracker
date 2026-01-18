@@ -35,6 +35,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             // User commands
             commands::get_user,
+            commands::get_users,
             commands::create_user,
             commands::update_user,
             commands::delete_user,
@@ -52,6 +53,8 @@ pub fn run() {
             commands::toggle_task_completion,
             // Achievement commands
             commands::get_achievements,
+            commands::get_unseen_achievements_count,
+            commands::mark_achievements_seen,
             commands::unlock_achievement,
             commands::check_and_unlock_achievements,
             // Settings commands

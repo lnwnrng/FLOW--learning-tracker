@@ -24,6 +24,7 @@ interface SessionState {
     fetchUserStats: () => Promise<void>;
     fetchHeatmapData: () => Promise<void>;
     getTodayFocusSeconds: () => number;
+    getTodaySessionCount: () => number;
     getWeekData: () => number[];
     clearError: () => void;
 }
@@ -59,6 +60,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
                 getDateDaysAgo(7),
                 getTodayDate()
             );
+            get().fetchHeatmapData();
 
             return session;
         } catch (error) {
@@ -129,13 +131,25 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         return todayStats?.totalFocusSeconds ?? 0;
     },
 
+    getTodaySessionCount: () => {
+        const { dailyStats } = get();
+        const today = getTodayDate();
+        const todayStats = dailyStats.find(s => s.date === today);
+        return todayStats?.sessionCount ?? 0;
+    },
+
     getWeekData: () => {
         const { dailyStats } = get();
         const result: number[] = [];
+        const today = new Date();
+        const startOfWeek = new Date(today);
+        startOfWeek.setDate(today.getDate() - today.getDay());
 
-        for (let i = 6; i >= 0; i--) {
-            const date = getDateDaysAgo(i);
-            const stat = dailyStats.find(s => s.date === date);
+        for (let i = 0; i < 7; i++) {
+            const date = new Date(startOfWeek);
+            date.setDate(startOfWeek.getDate() + i);
+            const dateKey = formatLocalDate(date);
+            const stat = dailyStats.find(s => s.date === dateKey);
             result.push(stat ? Math.round(stat.totalFocusSeconds / 60) : 0);
         }
 
@@ -146,13 +160,19 @@ export const useSessionStore = create<SessionState>((set, get) => ({
 }));
 
 // Helper functions
+function formatLocalDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 function getTodayDate(): string {
-    const now = new Date();
-    return now.toISOString().split('T')[0];
+    return formatLocalDate(new Date());
 }
 
 function getDateDaysAgo(days: number): string {
     const date = new Date();
     date.setDate(date.getDate() - days);
-    return date.toISOString().split('T')[0];
+    return formatLocalDate(date);
 }

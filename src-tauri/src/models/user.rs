@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 /// User model
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct User {
     pub id: String,
     pub name: String,
@@ -15,6 +16,7 @@ pub struct User {
 
 /// Create user request
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CreateUserRequest {
     pub name: String,
     pub email: Option<String>,
@@ -22,6 +24,7 @@ pub struct CreateUserRequest {
 
 /// Update user request
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct UpdateUserRequest {
     pub name: Option<String>,
     pub email: Option<String>,

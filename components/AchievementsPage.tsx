@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Trophy, Star, Flame, Target, Clock, Zap, Award, Moon, Sun } from 'lucide-react';
-import { useUserStore, useSessionStore } from '../stores';
-import { getAchievements } from '../services/achievementService';
-import type { AchievementInfo, AchievementType } from '../types';
+import { ArrowLeft, Trophy } from 'lucide-react';
+import { useUserStore } from '../stores';
+import { getAchievements, markAchievementsSeen } from '../services/achievementService';
+import type { AchievementInfo } from '../types';
+import { achievementDisplay } from './achievementDisplay';
 
 interface AchievementsPageProps {
     onBack: () => void;
+    onViewed?: () => void;
     currentStreak?: number;
     longestStreak?: number;
     totalFocusTime?: number;
@@ -13,26 +15,9 @@ interface AchievementsPageProps {
     tasksCompleted?: number;
 }
 
-// Map achievement types to icons and colors
-const achievementConfig: Record<AchievementType, {
-    icon: React.ElementType;
-    color: string;
-    title: string;
-}> = {
-    'first_session': { icon: Zap, color: 'from-amber-400 to-yellow-500', title: 'First Flow' },
-    'hour_master': { icon: Clock, color: 'from-indigo-400 to-purple-500', title: 'Hour Master' },
-    'streak_week': { icon: Flame, color: 'from-orange-400 to-red-500', title: 'Week Warrior' },
-    'streak_month': { icon: Star, color: 'from-violet-400 to-purple-500', title: 'Monthly Champion' },
-    'total_hours_10': { icon: Clock, color: 'from-sky-400 to-blue-500', title: '10 Hours Club' },
-    'total_hours_50': { icon: Trophy, color: 'from-emerald-400 to-green-500', title: '50 Hours Legend' },
-    'total_hours_100': { icon: Trophy, color: 'from-amber-500 to-orange-600', title: 'Century Master' },
-    'early_bird': { icon: Sun, color: 'from-yellow-400 to-orange-500', title: 'Early Bird' },
-    'night_owl': { icon: Moon, color: 'from-indigo-500 to-purple-600', title: 'Night Owl' },
-    'task_master': { icon: Award, color: 'from-cyan-400 to-teal-500', title: 'Task Master' },
-};
-
 const AchievementsPage: React.FC<AchievementsPageProps> = ({
     onBack,
+    onViewed,
     currentStreak = 0,
     longestStreak = 0,
     totalFocusTime = 0,
@@ -45,26 +30,31 @@ const AchievementsPage: React.FC<AchievementsPageProps> = ({
 
     // Fetch achievements from backend
     useEffect(() => {
-        if (user) {
-            setIsLoading(true);
-            getAchievements(user.id)
-                .then(data => {
-                    setAchievements(data);
-                    setIsLoading(false);
-                })
-                .catch(err => {
-                    console.error('Failed to fetch achievements:', err);
-                    setIsLoading(false);
-                });
-        }
-    }, [user]);
+        if (!user) return;
+
+        setIsLoading(true);
+        getAchievements(user.id)
+            .then(data => {
+                setAchievements(data);
+                setIsLoading(false);
+            })
+            .catch(err => {
+                console.error('Failed to fetch achievements:', err);
+                setIsLoading(false);
+            });
+
+        markAchievementsSeen(user.id)
+            .then(() => onViewed?.())
+            .catch(err => console.error('Failed to mark achievements as seen:', err));
+    }, [user, onViewed]);
 
     // Build display data
     const displayAchievements = achievements.map(a => {
-        const config = achievementConfig[a.achievementType] || {
+        const config = achievementDisplay[a.achievementType] || {
             icon: Trophy,
             color: 'from-slate-400 to-slate-500',
             title: a.name,
+            description: a.description,
         };
 
         // Calculate progress for locked achievements
