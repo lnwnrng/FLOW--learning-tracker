@@ -167,10 +167,8 @@ const AchievementUnlockedModal: React.FC<AchievementUnlockedModalProps> = ({
             />
 
             <div
-                className="absolute inset-0 transition-opacity duration-500"
+                className="absolute inset-0 transition-opacity duration-500 flow-backdrop-strong"
                 style={{
-                    backgroundColor: 'rgba(15, 23, 42, 0.5)',
-                    backdropFilter: 'blur(12px)',
                     opacity: showContent ? 1 : 0,
                 }}
                 onClick={onClose}
@@ -183,22 +181,18 @@ const AchievementUnlockedModal: React.FC<AchievementUnlockedModalProps> = ({
                     ${showContent ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}
                 `}
                 style={{
-                    background: 'linear-gradient(145deg, rgba(236, 254, 255, 0.85), rgba(237, 233, 254, 0.75))',
+                    background: 'var(--achievement-surface)',
+                    border: '1px solid var(--achievement-border)',
+                    boxShadow: 'var(--achievement-shadow)',
                     backdropFilter: 'blur(24px) saturate(180%)',
                     WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-                    border: '1px solid rgba(56, 189, 248, 0.25)',
-                    boxShadow: `
-                        0 30px 80px -30px rgba(59, 130, 246, 0.35),
-                        0 20px 50px -20px rgba(15, 23, 42, 0.2),
-                        inset 0 1px 3px rgba(255, 255, 255, 0.5)
-                    `,
                 }}
                 onClick={(e) => e.stopPropagation()}
             >
                 <div
                     className="absolute inset-0 pointer-events-none rounded-3xl overflow-hidden"
                     style={{
-                        background: 'linear-gradient(180deg, rgba(255,255,255,0.25) 0%, transparent 45%)',
+                        background: 'var(--achievement-highlight)',
                     }}
                 />
 
@@ -268,7 +262,7 @@ const AchievementUnlockedModal: React.FC<AchievementUnlockedModalProps> = ({
                                 boxShadow: '0 8px 24px -8px rgba(56, 189, 248, 0.45)',
                             }}
                         >
-                            View Achievements
+                            View
                             <ChevronRight size={16} />
                         </button>
                     )}

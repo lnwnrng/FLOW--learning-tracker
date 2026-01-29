@@ -16,7 +16,7 @@ import { ToastProvider, useToast } from './components/ToastNotification';
 import PremiumSuccessModal from './components/PremiumSuccessModal';
 import AchievementUnlockedModal from './components/AchievementUnlockedModal';
 import { Tab, Task, TaskCategory, AchievementType, User } from './types';
-import { useUserStore, useSessionStore, useTaskStore } from './stores';
+import { useUserStore, useSessionStore, useTaskStore, useSettingsStore } from './stores';
 import { checkAndUnlockAchievements, getUnseenAchievementsCount } from './services/achievementService';
 import { getUsers, setCurrentUser } from './services/userService';
 
@@ -56,7 +56,7 @@ const OnboardingScreen: React.FC<{
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-violet-50 to-sky-50 p-6">
+    <div className="min-h-screen flex items-center justify-center onboarding-surface p-6">
       <div className="w-full max-w-md">
         <div className="backdrop-blur-xl bg-white/70 rounded-3xl p-8 shadow-xl border border-white/50">
           <div className="text-center mb-8">
@@ -184,6 +184,7 @@ const App: React.FC = () => {
 
   // Zustand stores
   const { user, isLoading: userLoading, isInitialized, initialize, createUser, updateUser, signOut, setUser } = useUserStore();
+  const { settings, fetchSettings } = useSettingsStore();
   const {
     dailyStats,
     userStats,
@@ -205,6 +206,7 @@ const App: React.FC = () => {
   const sessionStartRef = useRef<Date | null>(null);
 
   const isTimerRunning = timerOrbState === 'running';
+  const themeMode = settings['themeMode'] === 'dark' ? 'dark' : 'light';
 
   const refreshUnseenAchievements = useCallback(async () => {
     if (!user) return;
@@ -234,6 +236,18 @@ const App: React.FC = () => {
   useEffect(() => {
     invoke('close_splashscreen').catch(() => undefined);
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      fetchSettings();
+    }
+  }, [user, fetchSettings]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.dataset.theme = themeMode;
+    root.style.colorScheme = themeMode;
+  }, [themeMode]);
 
   useEffect(() => {
     if (!user && isInitialized) {
@@ -599,6 +613,24 @@ const App: React.FC = () => {
 
   // Dynamic background based on active tab
   const getBackground = () => {
+    if (themeMode === 'dark') {
+      if (activeTab === Tab.FOCUS) {
+        return `
+          radial-gradient(ellipse 90% 70% at 50% 0%, rgba(139, 92, 246, 0.25), transparent),
+          radial-gradient(ellipse 70% 60% at 100% 30%, rgba(56, 189, 248, 0.22), transparent),
+          radial-gradient(ellipse 60% 50% at 0% 70%, rgba(249, 168, 212, 0.16), transparent),
+          radial-gradient(ellipse 50% 60% at 80% 100%, rgba(167, 139, 250, 0.18), transparent),
+          linear-gradient(180deg, #0b1120 0%, #0f172a 55%, #111827 100%)
+        `;
+      }
+      return `
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(120, 119, 198, 0.18), transparent),
+        radial-gradient(ellipse 60% 40% at 100% 0%, rgba(249, 168, 212, 0.14), transparent),
+        radial-gradient(ellipse 50% 50% at 0% 100%, rgba(56, 189, 248, 0.14), transparent),
+        radial-gradient(ellipse 40% 40% at 80% 80%, rgba(167, 139, 250, 0.12), transparent),
+        #0b1120
+      `;
+    }
     if (activeTab === Tab.FOCUS) {
       return `
         radial-gradient(ellipse 90% 70% at 50% 0%, rgba(139, 92, 246, 0.18), transparent),
@@ -659,6 +691,7 @@ const App: React.FC = () => {
         onView={() => {
           setShowAchievementModal(false);
           setUnlockedAchievements([]);
+          setActiveTab(Tab.USER);
           setSubPage('achievements');
         }}
       />

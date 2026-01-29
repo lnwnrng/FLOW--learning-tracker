@@ -86,7 +86,7 @@ const TaskList: React.FC<TaskListProps> = ({
       <div className="space-y-3">
         {sortedTasks.length === 0 ? (
           <div className="py-16 text-center rounded-2xl glass-card ring-1 ring-white/10">
-            <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm border border-slate-100">
+            <div className="w-14 h-14 bg-white/70 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm border border-slate-100">
               <Calendar size={24} className="text-slate-400" />
             </div>
             <p className="text-slate-600 font-semibold">No tasks for today</p>

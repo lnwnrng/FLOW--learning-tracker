@@ -268,7 +268,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
                             <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center mb-3`}>
                                 <Icon size={20} className="text-white" />
                             </div>
-                            <p className="text-2xl font-bold text-slate-800">{stat.value}</p>
+                            <p className="text-2xl font-bold stat-number">{stat.value}</p>
                             <p className="text-sm text-slate-500 font-medium">{stat.label}</p>
                         </div>
                     );
@@ -286,10 +286,10 @@ const UserProfile: React.FC<UserProfileProps> = ({
                             className={`w-full flex items-center justify-between p-4 hover:bg-white/30 transition-colors ${index !== menuItems.length - 1 ? 'border-b border-white/20' : ''}`}
                         >
                             <div className="flex items-center gap-3">
-                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${item.highlight ? 'bg-gradient-to-br from-amber-400 to-yellow-500' : 'bg-slate-100'}`}>
-                                    <Icon size={20} className={item.highlight ? 'text-white' : 'text-slate-600'} />
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${item.highlight ? 'user-menu-icon-wrap user-menu-icon-wrap--highlight' : 'user-menu-icon-wrap'}`}>
+                                    <Icon size={20} className={item.highlight ? 'user-menu-icon-highlight' : 'user-menu-icon'} />
                                 </div>
-                                <span className={`font-semibold ${item.highlight ? 'text-amber-600' : 'text-slate-700'}`}>
+                                <span className={`font-semibold ${item.highlight ? 'user-menu-text-highlight' : 'user-menu-text'}`}>
                                     {item.label}
                                 </span>
                             </div>
@@ -299,7 +299,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
                                         {item.badge}
                                     </span>
                                 )}
-                                <ChevronRight size={20} className="text-slate-400" />
+                                <ChevronRight size={20} className="user-menu-chevron" />
                             </div>
                         </button>
                     );
@@ -309,12 +309,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
             {/* Sign Out Button */}
             <button
                 onClick={() => setShowSignOutModal(true)}
-                className="w-full flex items-center justify-center gap-2 p-4 rounded-2xl transition-all ring-1 ring-slate-200/50 hover:scale-[1.01] active:scale-[0.99] font-semibold"
-                style={{
-                    background: 'rgba(248, 250, 252, 0.8)',
-                    backdropFilter: 'blur(12px)',
-                    color: '#6366f1',
-                }}
+                className="w-full flex items-center justify-center gap-2 p-4 rounded-2xl transition-all hover:scale-[1.01] active:scale-[0.99] font-semibold signout-button"
             >
                 <LogOut size={20} />
                 Sign Out

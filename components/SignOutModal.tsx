@@ -16,28 +16,18 @@ const SignOutModal: React.FC<SignOutModalProps> = ({
 
     return (
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style={{ backgroundColor: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(8px)' }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 flow-backdrop-strong"
             onClick={onCancel}
         >
             <div
-                className="relative w-full max-w-sm rounded-3xl p-6 animate-fade-in"
-                style={{
-                    background: 'rgba(248, 250, 252, 0.85)',
-                    backdropFilter: 'blur(24px) saturate(160%)',
-                    WebkitBackdropFilter: 'blur(24px) saturate(160%)',
-                    border: '1px solid rgba(148, 163, 184, 0.25)',
-                    boxShadow: `
-                        0 25px 70px -30px rgba(100, 116, 139, 0.25),
-                        inset 0 1px 2px rgba(255, 255, 255, 0.5)
-                    `,
-                }}
+                className="relative w-full max-w-sm rounded-3xl p-6 animate-fade-in flow-modal"
                 onClick={(e) => e.stopPropagation()}
             >
+                <div className="absolute inset-0 pointer-events-none rounded-3xl overflow-hidden flow-modal-highlight" />
                 {/* Close button */}
                 <button
                     onClick={onCancel}
-                    className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100/50 transition-all"
+                    className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-white/20 transition-all"
                 >
                     <X size={18} />
                 </button>

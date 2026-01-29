@@ -195,10 +195,8 @@ const PremiumSuccessModal: React.FC<PremiumSuccessModalProps> = ({
 
             {/* Backdrop */}
             <div
-                className="absolute inset-0 transition-opacity duration-500"
+                className="absolute inset-0 transition-opacity duration-500 flow-backdrop-strong"
                 style={{
-                    backgroundColor: 'rgba(15, 23, 42, 0.5)',
-                    backdropFilter: 'blur(12px)',
                     opacity: showContent ? 1 : 0,
                 }}
                 onClick={onClose}
@@ -212,16 +210,11 @@ const PremiumSuccessModal: React.FC<PremiumSuccessModalProps> = ({
                     ${showContent ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}
                 `}
                 style={{
-                    background: 'linear-gradient(145deg, rgba(255, 251, 235, 0.85), rgba(254, 243, 199, 0.75))',
+                    background: 'var(--premium-surface)',
+                    border: '1px solid var(--premium-border)',
+                    boxShadow: 'var(--premium-shadow)',
                     backdropFilter: 'blur(24px) saturate(180%)',
                     WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-                    border: '1px solid rgba(251, 191, 36, 0.3)',
-                    boxShadow: `
-                        0 30px 80px -30px rgba(251, 191, 36, 0.4),
-                        0 20px 50px -20px rgba(15, 23, 42, 0.2),
-                        inset 0 1px 3px rgba(255, 255, 255, 0.5),
-                        inset 0 -1px 3px rgba(251, 191, 36, 0.1)
-                    `,
                 }}
                 onClick={(e) => e.stopPropagation()}
             >
@@ -229,7 +222,7 @@ const PremiumSuccessModal: React.FC<PremiumSuccessModalProps> = ({
                 <div
                     className="absolute inset-0 pointer-events-none rounded-3xl overflow-hidden"
                     style={{
-                        background: 'linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 40%)',
+                        background: 'var(--premium-highlight)',
                     }}
                 />
 
@@ -280,8 +273,8 @@ const PremiumSuccessModal: React.FC<PremiumSuccessModalProps> = ({
                                 ${checkedItems.includes(index) ? 'opacity-100' : 'opacity-40'}
                             `}
                             style={{
-                                background: 'rgba(255, 255, 255, 0.5)',
-                                border: '1px solid rgba(255, 255, 255, 0.6)',
+                                background: 'var(--premium-item-surface)',
+                                border: '1px solid var(--premium-item-border)',
                             }}
                         >
                             {/* Checkmark */}

@@ -92,15 +92,14 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
         <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center">
             {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+                className="absolute inset-0 flow-backdrop"
                 onClick={onClose}
             />
 
             {/* Modal */}
             <div className="
         relative w-full md:w-[400px] 
-        bg-white rounded-t-[2rem] md:rounded-[2rem] 
-        shadow-2xl shadow-black/20
+        flow-sheet rounded-t-[2rem] md:rounded-[2rem]
         max-h-[90vh] overflow-y-auto
         animate-fade-in
       ">
@@ -156,7 +155,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                       border-2 transition-all duration-200
                       ${isSelected
                                                 ? `${cat.bgColor} ${cat.borderColor}`
-                                                : 'bg-white border-slate-100 hover:border-slate-200'
+                                                : 'bg-white/70 border-slate-100 hover:border-slate-200'
                                             }
                     `}
                                     >

@@ -123,12 +123,12 @@ const StatsPage: React.FC = () => {
     }, [heatmapData, selectedYear]);
 
     const getColor = (value: number) => {
-        if (value === 0) return 'bg-slate-100';
+        if (value === 0) return 'heatmap-0';
         const intensity = value / maxValue;
-        if (intensity < 0.25) return 'bg-emerald-200';
-        if (intensity < 0.5) return 'bg-emerald-300';
-        if (intensity < 0.75) return 'bg-emerald-400';
-        return 'bg-emerald-500';
+        if (intensity < 0.25) return 'heatmap-1';
+        if (intensity < 0.5) return 'heatmap-2';
+        if (intensity < 0.75) return 'heatmap-3';
+        return 'heatmap-4';
     };
 
     const formatTime = (minutes: number) => {
@@ -211,7 +211,7 @@ const StatsPage: React.FC = () => {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold text-slate-800">Statistics</h1>
-                <div className="flex items-center gap-1 bg-white rounded-xl p-1 border border-slate-100">
+                <div className="flex items-center gap-1 stats-year-selector rounded-xl p-1">
                     <button
                         onClick={() => setSelectedYear(y => y - 1)}
                         className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-700 transition-colors"
@@ -246,7 +246,7 @@ const StatsPage: React.FC = () => {
                             <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${card.color} flex items-center justify-center mb-2`}>
                                 <Icon size={18} className="text-white" />
                             </div>
-                            <p className="text-xl font-bold text-slate-800">{card.value}</p>
+                            <p className="text-xl font-bold stat-number">{card.value}</p>
                             <p className="text-xs text-slate-500 font-medium">{card.label}</p>
                             <p className="text-xs text-slate-400 mt-0.5">{card.subtext}</p>
                         </div>
@@ -261,11 +261,11 @@ const StatsPage: React.FC = () => {
                     <div className="flex items-center gap-1.5 text-xs text-slate-500">
                         <span>Less</span>
                         <div className="flex gap-0.5">
-                            <div className="w-3 h-3 rounded-sm bg-slate-100" />
-                            <div className="w-3 h-3 rounded-sm bg-emerald-200" />
-                            <div className="w-3 h-3 rounded-sm bg-emerald-300" />
-                            <div className="w-3 h-3 rounded-sm bg-emerald-400" />
-                            <div className="w-3 h-3 rounded-sm bg-emerald-500" />
+                            <div className="w-3 h-3 rounded-sm heatmap-0" />
+                            <div className="w-3 h-3 rounded-sm heatmap-1" />
+                            <div className="w-3 h-3 rounded-sm heatmap-2" />
+                            <div className="w-3 h-3 rounded-sm heatmap-3" />
+                            <div className="w-3 h-3 rounded-sm heatmap-4" />
                         </div>
                         <span>More</span>
                     </div>
@@ -313,16 +313,19 @@ const StatsPage: React.FC = () => {
                                         const isCurrentYear = day.date.getFullYear() === selectedYear;
                                         const dayStr = formatDateLocal(day.date);
                                         const isFuture = dayStr > todayStr;
+                                        const tooltipText = isCurrentYear && !isFuture
+                                            ? `${dayStr}: ${day.value > 0 ? formatTime(day.value) : 'No focus'}`
+                                            : undefined;
 
                                         return (
                                             <div
                                                 key={dayIndex}
                                                 className={`
-                                                    w-3 h-3 rounded-sm transition-colors
+                                                    heatmap-cell w-3 h-3 rounded-sm transition-colors
                                                     ${!isCurrentYear || isFuture ? 'bg-transparent' : getColor(day.value)}
-                                                    ${day.value > 0 ? 'cursor-pointer hover:ring-2 hover:ring-slate-300' : ''}
+                                                    ${isCurrentYear && !isFuture ? 'cursor-pointer hover:ring-2 heatmap-ring' : ''}
                                                 `}
-                                                title={isCurrentYear && !isFuture ? `${dayStr}: ${formatTime(day.value)}` : ''}
+                                                data-tooltip={tooltipText}
                                             />
                                         );
                                     })}
@@ -349,9 +352,9 @@ const StatsPage: React.FC = () => {
                         return (
                             <div key={day} className="flex items-center gap-3">
                                 <span className="w-10 text-sm font-medium text-slate-500">{day}</span>
-                                <div className="flex-1 h-6 bg-slate-100 rounded-full overflow-hidden">
+                                <div className="flex-1 h-6 weekly-bar-track rounded-full overflow-hidden">
                                     <div
-                                        className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full transition-all duration-500"
+                                        className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full transition-all duration-500 weekly-bar-fill"
                                         style={{ width: `${percentage}%` }}
                                     />
                                 </div>
@@ -372,7 +375,7 @@ const StatsPage: React.FC = () => {
                     </div>
                     <div>
                         <p className="text-sm font-medium text-amber-700">Average Session</p>
-                        <p className="text-2xl font-bold text-slate-800">{formatTime(averageSessionTime)}</p>
+                        <p className="text-2xl font-bold stat-number">{formatTime(averageSessionTime)}</p>
                     </div>
                 </div>
             </div>

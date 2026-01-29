@@ -101,10 +101,7 @@ const Calendar: React.FC<CalendarProps> = ({
 
   return (
     <div className="
-      w-full rounded-3xl p-6 
-      bg-gradient-to-br from-white via-slate-50/80 to-violet-50/50
-      shadow-sm shadow-slate-200/50
-      border border-white/60
+      calendar-surface w-full rounded-3xl p-6 
       backdrop-blur-sm
     ">
       {/* Header with date and navigation */}

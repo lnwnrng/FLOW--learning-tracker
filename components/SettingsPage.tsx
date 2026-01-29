@@ -16,6 +16,7 @@ import {
     ChevronRight,
     Check
 } from 'lucide-react';
+import { useSettingsStore } from '../stores';
 
 interface SettingsPageProps {
     onBack: () => void;
@@ -96,11 +97,16 @@ const SettingOption: React.FC<SettingOptionProps> = ({
 const SettingsPage: React.FC<SettingsPageProps> = ({ onBack }) => {
     // Settings state
     const [notifications, setNotifications] = useState(true);
-    const [darkMode, setDarkMode] = useState(false);
     const [sound, setSound] = useState(true);
     const [vibration, setVibration] = useState(true);
     const [focusReminder, setFocusReminder] = useState(true);
-    const [selectedTheme, setSelectedTheme] = useState<'violet' | 'sky' | 'emerald' | 'rose'>('violet');
+    const { settings, setSetting } = useSettingsStore();
+    const themeMode = settings['themeMode'] === 'dark' ? 'dark' : 'light';
+    const isDarkMode = themeMode === 'dark';
+    const rawAccent = settings['themeAccent'];
+    const selectedTheme = (rawAccent === 'violet' || rawAccent === 'sky' || rawAccent === 'emerald' || rawAccent === 'rose')
+        ? rawAccent
+        : 'violet';
 
     const themeColors = [
         { id: 'violet' as const, gradient: 'from-violet-500 to-purple-600', ring: 'ring-violet-400' },
@@ -140,7 +146,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onBack }) => {
                     {themeColors.map((theme) => (
                         <button
                             key={theme.id}
-                            onClick={() => setSelectedTheme(theme.id)}
+                            onClick={() => void setSetting('themeAccent', theme.id)}
                             className={`
                                 relative w-14 h-14 rounded-2xl bg-gradient-to-br ${theme.gradient}
                                 transition-all duration-300 hover:scale-105
@@ -161,11 +167,11 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onBack }) => {
             <div className="space-y-3">
                 <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wide px-1">Appearance</h3>
                 <SettingToggle
-                    icon={darkMode ? Moon : Sun}
+                    icon={isDarkMode ? Moon : Sun}
                     title="Dark Mode"
-                    description="Switch to dark theme"
-                    enabled={darkMode}
-                    onToggle={() => setDarkMode(!darkMode)}
+                    description={isDarkMode ? 'Switch to light theme' : 'Switch to dark theme'}
+                    enabled={isDarkMode}
+                    onToggle={() => void setSetting('themeMode', isDarkMode ? 'light' : 'dark')}
                     colorClass="from-indigo-500 to-purple-600"
                 />
             </div>

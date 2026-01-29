@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useCallback } from 'react';
+import { useSettingsStore } from '../stores';
 
 interface HomePageProps {
     userName?: string;
@@ -15,6 +16,9 @@ const HomePage: React.FC<HomePageProps> = ({
     weekData = [45, 120, 90, 30, 80, 165, 60],
     currentStreak = 7,
 }) => {
+    const { settings } = useSettingsStore();
+    const isDarkMode = settings['themeMode'] === 'dark';
+
     // Get greeting based on time
     const greeting = useMemo(() => {
         const hour = new Date().getHours();
@@ -234,8 +238,8 @@ const HomePage: React.FC<HomePageProps> = ({
                                                 <path d="M4 16C4 16 6 13 9 13C12 13 12 16 15 16C18 16 20 13 20 13" stroke="url(#teaserGradient)" strokeWidth="2.5" strokeLinecap="round" opacity="0.5" />
                                                 <defs>
                                                     <linearGradient id="teaserGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                                        <stop offset="0%" stopColor="#c084fc" />
-                                                        <stop offset="100%" stopColor="#60a5fa" />
+                                                        <stop offset="0%" stopColor="var(--flow-line-start)" />
+                                                        <stop offset="100%" stopColor="var(--flow-line-mid)" />
                                                     </linearGradient>
                                                 </defs>
                                             </svg>
@@ -267,16 +271,23 @@ const HomePage: React.FC<HomePageProps> = ({
                                         {/* Gradient definitions */}
                                         <defs>
                                             <linearGradient id="flowGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                                <stop offset="0%" stopColor="#c084fc" />
-                                                <stop offset="50%" stopColor="#60a5fa" />
-                                                <stop offset="100%" stopColor="#34d399" />
+                                                <stop offset="0%" stopColor="var(--flow-line-start)" />
+                                                <stop offset="50%" stopColor="var(--flow-line-mid)" />
+                                                <stop offset="100%" stopColor="var(--flow-line-end)" />
                                             </linearGradient>
                                             <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                                                <stop offset="0%" stopColor="#c084fc" stopOpacity="0.3" />
-                                                <stop offset="100%" stopColor="#60a5fa" stopOpacity="0.05" />
+                                                <stop offset="0%" stopColor="var(--flow-area-top)" />
+                                                <stop offset="100%" stopColor="var(--flow-area-bottom)" />
                                             </linearGradient>
-                                            <filter id="glow">
-                                                <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+                                            <filter id="flowGlowLight">
+                                                <feGaussianBlur stdDeviation="2.2" result="coloredBlur" />
+                                                <feMerge>
+                                                    <feMergeNode in="coloredBlur" />
+                                                    <feMergeNode in="SourceGraphic" />
+                                                </feMerge>
+                                            </filter>
+                                            <filter id="flowGlowDark">
+                                                <feGaussianBlur stdDeviation="1.6" result="coloredBlur" />
                                                 <feMerge>
                                                     <feMergeNode in="coloredBlur" />
                                                     <feMergeNode in="SourceGraphic" />
@@ -299,8 +310,8 @@ const HomePage: React.FC<HomePageProps> = ({
                                             strokeWidth="3"
                                             strokeLinecap="round"
                                             strokeLinejoin="round"
-                                            filter="url(#glow)"
-                                            className={`drop-shadow-lg ${shouldAnimateCurve ? 'curve-animate' : ''}`}
+                                            filter={isDarkMode ? 'url(#flowGlowDark)' : 'url(#flowGlowLight)'}
+                                            className={shouldAnimateCurve ? 'curve-animate' : ''}
                                         />
 
                                         {/* Data points */}
@@ -322,7 +333,7 @@ const HomePage: React.FC<HomePageProps> = ({
                                                             cx={x}
                                                             cy={y}
                                                             r="8"
-                                                            fill="rgba(139, 92, 246, 0.3)"
+                                                            fill="var(--flow-today-glow)"
                                                             className="animate-pulse"
                                                         />
                                                     )}
@@ -331,8 +342,8 @@ const HomePage: React.FC<HomePageProps> = ({
                                                         cx={x}
                                                         cy={y}
                                                         r={isToday ? 5 : 4}
-                                                        fill={isToday ? '#8b5cf6' : '#ffffff'}
-                                                        stroke={isToday ? '#ffffff' : 'url(#flowGradient)'}
+                                                        fill={isToday ? 'var(--flow-point-today)' : 'var(--flow-point)'}
+                                                        stroke={isToday ? 'var(--flow-point-ring)' : 'url(#flowGradient)'}
                                                         strokeWidth="2"
                                                     />
                                                 </g>
@@ -345,10 +356,11 @@ const HomePage: React.FC<HomePageProps> = ({
                                         {weekDays.map((day, index) => (
                                             <span
                                                 key={index}
-                                                className={`text-xs font-medium ${index === todayIndex
-                                                    ? 'text-violet-600 font-bold'
-                                                    : 'text-slate-400'
-                                                    }`}
+                                                className="text-xs font-medium"
+                                                style={{
+                                                    color: index === todayIndex ? 'var(--flow-day-active)' : 'var(--flow-day-label)',
+                                                    fontWeight: index === todayIndex ? 700 : 500,
+                                                }}
                                             >
                                                 {day}
                                             </span>

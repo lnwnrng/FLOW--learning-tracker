@@ -463,7 +463,7 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
                                 left: '12%',
                                 width: '45%',
                                 height: '32%',
-                                background: 'radial-gradient(ellipse 70% 60% at 40% 40%, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.25) 35%, transparent 65%)',
+                                background: 'radial-gradient(ellipse 70% 60% at 40% 40%, rgba(255,255,255,var(--orb-highlight-strong)) 0%, rgba(255,255,255,var(--orb-highlight-soft)) 35%, transparent 65%)',
                                 borderRadius: '50%',
                                 filter: 'blur(1px)',
                                 opacity: isActive ? 0.9 : 0.75
@@ -478,7 +478,7 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
                                 left: '55%',
                                 width: '16%',
                                 height: '12%',
-                                background: 'radial-gradient(ellipse at 50% 50%, rgba(255,255,255,0.5) 0%, transparent 70%)',
+                                background: 'radial-gradient(ellipse at 50% 50%, rgba(255,255,255,var(--orb-highlight-secondary)) 0%, rgba(255,255,255,var(--orb-highlight-secondary-soft)) 40%, transparent 70%)',
                                 borderRadius: '50%',
                                 filter: 'blur(1px)',
                                 opacity: isActive ? 0.75 : 0.55
@@ -493,7 +493,7 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
                                 left: '20%',
                                 right: '20%',
                                 height: '20%',
-                                background: 'radial-gradient(ellipse 90% 70% at 50% 100%, rgba(14, 165, 233, 0.08) 0%, transparent 70%)',
+                                background: 'radial-gradient(ellipse 90% 70% at 50% 100%, rgba(14, 165, 233, var(--orb-bottom-shadow)) 0%, transparent 70%)',
                                 borderRadius: '50%',
                                 filter: 'blur(3px)',
                                 opacity: isActive ? 0.8 : 0.6
@@ -504,23 +504,36 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
                         <span
                             className="text-5xl font-bold tracking-tight font-mono relative z-10 transition-all duration-500"
                             style={{
-                                color: '#1e293b',
+                                color: 'var(--orb-text)',
                                 textShadow: isActive
-                                    ? '0 2px 8px rgba(255,255,255,0.6), 0 0 30px rgba(56, 189, 248, 0.2)'
-                                    : '0 1px 4px rgba(255,255,255,0.4)'
+                                    ? 'var(--orb-text-shadow-active)'
+                                    : 'var(--orb-text-shadow-idle)'
                             }}
                         >
                             {formatTime(elapsedTime)}
                         </span>
 
                         {/* Status Label */}
-                        <div className="flex items-center gap-2 mt-4 px-4 py-1.5 rounded-full transition-all duration-500"
+                        <div
+                            className={`
+                                flex items-center gap-2 mt-4 px-4 py-1.5 rounded-full transition-all duration-500
+                                orb-status-chip
+                                ${orbState === 'running'
+                                    ? 'orb-status-chip--running'
+                                    : orbState === 'forming'
+                                        ? 'orb-status-chip--forming'
+                                        : orbState === 'dissolving'
+                                            ? 'orb-status-chip--dissolving'
+                                            : elapsedTime > 0
+                                                ? 'orb-status-chip--paused'
+                                                : ''
+                                }
+                            `}
                             style={{
-                                background: 'rgba(255, 255, 255, 0.4)',
-                                border: '1px solid rgba(255, 255, 255, 0.5)',
                                 backdropFilter: 'blur(8px)',
-                                boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
-                            }}>
+                                WebkitBackdropFilter: 'blur(8px)',
+                            }}
+                        >
                             {isRunning && (
                                 <span
                                     className="w-2 h-2 rounded-full"
@@ -530,7 +543,7 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
                                     }}
                                 />
                             )}
-                            <span className="text-sm font-medium text-slate-600">
+                            <span className="text-sm font-medium orb-status-text">
                                 {orbState === 'forming' ? 'Starting...' :
                                     orbState === 'running' ? 'In Flow' :
                                         orbState === 'dissolving' ? 'Pausing...' :
