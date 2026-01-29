@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Crown, Check, Sparkles } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { triggerFeedback } from '../services/feedbackService';
 
 interface PremiumSuccessModalProps {
     isOpen: boolean;
@@ -31,6 +32,7 @@ const PremiumSuccessModal: React.FC<PremiumSuccessModalProps> = ({
     const animationRef = useRef<number>();
     const [showContent, setShowContent] = useState(false);
     const [checkedItems, setCheckedItems] = useState<number[]>([]);
+    const didPlayFeedback = useRef(false);
 
     const benefits = [
         t('premium.features.unlimitedSessions'),
@@ -79,7 +81,13 @@ const PremiumSuccessModal: React.FC<PremiumSuccessModalProps> = ({
             setShowContent(false);
             setCheckedItems([]);
             particlesRef.current = [];
+            didPlayFeedback.current = false;
             return;
+        }
+
+        if (!didPlayFeedback.current) {
+            triggerFeedback('premium');
+            didPlayFeedback.current = true;
         }
 
         const canvas = canvasRef.current;
@@ -309,7 +317,10 @@ const PremiumSuccessModal: React.FC<PremiumSuccessModalProps> = ({
 
                 {/* CTA Button */}
                 <button
-                    onClick={onClose}
+                    onClick={() => {
+                        triggerFeedback('tap');
+                        onClose();
+                    }}
                     className="w-full py-4 rounded-2xl font-bold text-white text-base transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
                     style={{
                         background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)',

@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { languageToLocale, normalizeLanguage } from '../i18n';
+import { triggerFeedback } from '../services/feedbackService';
 
 interface CalendarEvent {
   date: string; // YYYY-MM-DD format to match task date
@@ -123,14 +124,20 @@ const Calendar: React.FC<CalendarProps> = ({
         </h2>
         <div className="flex gap-0.5">
           <button
-            onClick={goToPrevMonth}
+            onClick={() => {
+              triggerFeedback('nav');
+              goToPrevMonth();
+            }}
             aria-label={t('calendar.prevMonth')}
             className="p-2 hover:bg-white/80 rounded-xl text-slate-400 hover:text-slate-700 transition-all duration-200"
           >
             <ChevronLeft size={18} />
           </button>
           <button
-            onClick={goToNextMonth}
+            onClick={() => {
+              triggerFeedback('nav');
+              goToNextMonth();
+            }}
             aria-label={t('calendar.nextMonth')}
             className="p-2 hover:bg-white/80 rounded-xl text-slate-400 hover:text-slate-700 transition-all duration-200"
           >
@@ -157,7 +164,11 @@ const Calendar: React.FC<CalendarProps> = ({
           return (
             <div key={index} className="flex flex-col items-center justify-center py-1.5">
               <button
-                onClick={() => day.isCurrentMonth && onSelectDate?.(day.fullDate)}
+                onClick={() => {
+                  if (!day.isCurrentMonth) return;
+                  triggerFeedback('tap');
+                  onSelectDate?.(day.fullDate);
+                }}
                 className={`
                   w-9 h-9 flex items-center justify-center rounded-xl text-sm font-medium
                   transition-all duration-200

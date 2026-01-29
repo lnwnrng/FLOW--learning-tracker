@@ -16,6 +16,7 @@ import {
 import { User, UserStats } from '../types';
 import { useTranslation } from 'react-i18next';
 import { languageToLocale, normalizeLanguage } from '../i18n';
+import { triggerFeedback } from '../services/feedbackService';
 import SignOutModal from './SignOutModal';
 
 interface UserProfileProps {
@@ -166,7 +167,10 @@ const UserProfile: React.FC<UserProfileProps> = ({
 
                             {/* Camera button */}
                             <button
-                                onClick={() => fileInputRef.current?.click()}
+                                onClick={() => {
+                                    triggerFeedback('tap');
+                                    fileInputRef.current?.click();
+                                }}
                                 className="absolute bottom-0 right-0 w-9 h-9 bg-white rounded-full shadow-lg flex items-center justify-center text-slate-600 hover:bg-slate-50 transition-colors"
                             >
                                 <Camera size={16} />
@@ -209,13 +213,19 @@ const UserProfile: React.FC<UserProfileProps> = ({
                             />
                             <div className="flex gap-2 justify-center pt-2">
                                 <button
-                                    onClick={handleCancel}
+                                    onClick={() => {
+                                        triggerFeedback('tap');
+                                        handleCancel();
+                                    }}
                                     className="px-4 py-2 bg-white/20 text-white rounded-xl hover:bg-white/30 transition-colors flex items-center gap-1"
                                 >
                                     <X size={16} /> {t('common.cancel')}
                                 </button>
                                 <button
-                                    onClick={handleSave}
+                                    onClick={() => {
+                                        triggerFeedback('success');
+                                        handleSave();
+                                    }}
                                     className="px-4 py-2 bg-white text-violet-600 rounded-xl hover:bg-white/90 transition-colors font-semibold flex items-center gap-1"
                                 >
                                     <Check size={16} /> {t('common.save')}
@@ -242,7 +252,10 @@ const UserProfile: React.FC<UserProfileProps> = ({
                             </div>
                             <p className="text-white/70 text-sm mt-1">{user.email}</p>
                             <button
-                                onClick={() => setIsEditing(true)}
+                                onClick={() => {
+                                    triggerFeedback('tap');
+                                    setIsEditing(true);
+                                }}
                                 className="mt-3 px-4 py-1.5 bg-white/20 text-white text-sm rounded-full hover:bg-white/30 transition-colors inline-flex items-center gap-1.5"
                             >
                                 <Edit3 size={14} /> {t('profile.editProfile')}
@@ -290,7 +303,10 @@ const UserProfile: React.FC<UserProfileProps> = ({
                     return (
                         <button
                             key={index}
-                            onClick={() => onNavigate?.(item.action)}
+                            onClick={() => {
+                                triggerFeedback('nav');
+                                onNavigate?.(item.action);
+                            }}
                             className={`w-full flex items-center justify-between p-4 hover:bg-white/30 transition-colors ${index !== menuItems.length - 1 ? 'border-b border-white/20' : ''}`}
                         >
                             <div className="flex items-center gap-3">
@@ -316,7 +332,10 @@ const UserProfile: React.FC<UserProfileProps> = ({
 
             {/* Sign Out Button */}
             <button
-                onClick={() => setShowSignOutModal(true)}
+                onClick={() => {
+                    triggerFeedback('modal');
+                    setShowSignOutModal(true);
+                }}
                 className="w-full flex items-center justify-center gap-2 p-4 rounded-2xl transition-all hover:scale-[1.01] active:scale-[0.99] font-semibold signout-button"
             >
                 <LogOut size={20} />

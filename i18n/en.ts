@@ -174,7 +174,6 @@ const en = {
     subtitle: 'Customize your experience',
     sections: {
       appearance: 'Appearance',
-      notifications: 'Notifications',
       soundHaptics: 'Sound & Haptics',
       more: 'More',
     },
@@ -182,16 +181,6 @@ const en = {
       title: 'Dark Mode',
       toLight: 'Switch to light theme',
       toDark: 'Switch to dark theme',
-    },
-    notifications: {
-      push: {
-        title: 'Push Notifications',
-        description: 'Get reminders and updates',
-      },
-      focusReminders: {
-        title: 'Focus Reminders',
-        description: 'Daily reminder to focus',
-      },
     },
     sound: {
       soundEffects: {

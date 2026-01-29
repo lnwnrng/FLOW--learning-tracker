@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Clock, CheckCircle2, RotateCcw, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { triggerFeedback } from '../services/feedbackService';
 import { useToast } from './ToastNotification';
 
 type OrbState = 'idle' | 'forming' | 'running' | 'dissolving';
@@ -298,7 +299,10 @@ const SessionEndModal: React.FC<SessionEndModalProps> = ({
                 {/* Buttons */}
                 <div className="flex gap-3">
                     <button
-                        onClick={onCancel}
+                        onClick={() => {
+                            triggerFeedback('tap');
+                            onCancel();
+                        }}
                         className="flex-1 py-3 px-4 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
                         style={{
                             background: 'rgba(241, 245, 249, 0.9)',
@@ -382,13 +386,16 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
         if (orbState === 'idle') {
             if (elapsedTime > 0) {
                 // Resume
+                triggerFeedback('timerStart');
                 onStart();
             } else {
                 // Start fresh
+                triggerFeedback('timerStart');
                 onStart();
             }
         } else if (orbState === 'running') {
             // Pause
+            triggerFeedback('timerPause');
             onPause();
         }
         // If in transition, do nothing
@@ -565,7 +572,10 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
                     <div className="flex items-center justify-center pb-2">
                         {/* End Session Button - Long Press */}
                         <LongPressButton
-                            onComplete={() => setShowEndModal(true)}
+                            onComplete={() => {
+                                triggerFeedback('modal');
+                                setShowEndModal(true);
+                            }}
                             disabled={orbState === 'forming' || orbState === 'dissolving'}
                             size={56}
                             duration={1200}

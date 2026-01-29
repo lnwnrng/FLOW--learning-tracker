@@ -2,6 +2,7 @@ import React, { useMemo, useState, useCallback } from 'react';
 import { useSettingsStore } from '../stores';
 import { useTranslation } from 'react-i18next';
 import { languageToLocale, normalizeLanguage } from '../i18n';
+import { triggerFeedback } from '../services/feedbackService';
 
 interface HomePageProps {
     userName?: string;
@@ -70,6 +71,7 @@ const HomePage: React.FC<HomePageProps> = ({
     // Handle flip with animation lock
     const handleFlip = useCallback(() => {
         if (isAnimating) return;
+        triggerFeedback('tap');
         setIsAnimating(true);
         setIsFlipped(prev => {
             const newFlipped = !prev;

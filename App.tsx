@@ -21,6 +21,7 @@ import { useUserStore, useSessionStore, useTaskStore, useSettingsStore } from '.
 import { checkAndUnlockAchievements, getUnseenAchievementsCount } from './services/achievementService';
 import { getUsers, setCurrentUser } from './services/userService';
 import i18n, { normalizeLanguage, languageToLocale } from './i18n';
+import { triggerFeedback } from './services/feedbackService';
 
 // Category to color mapping for calendar dots
 const categoryDotColors: Record<TaskCategory, string> = {
@@ -54,6 +55,7 @@ const OnboardingScreen: React.FC<{
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim()) {
+      triggerFeedback('success');
       onCreateUser(name.trim());
     }
   };
@@ -117,7 +119,10 @@ const OnboardingScreen: React.FC<{
                 {existingUsers.map((existingUser) => (
                   <button
                     key={existingUser.id}
-                    onClick={() => onSelectUser(existingUser)}
+                    onClick={() => {
+                      triggerFeedback('nav');
+                      onSelectUser(existingUser);
+                    }}
                     className="group relative rounded-2xl p-3 text-left transition-all duration-300 hover:scale-[1.02]"
                     style={{
                       background: 'rgba(255, 255, 255, 0.7)',

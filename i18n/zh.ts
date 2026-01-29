@@ -174,7 +174,6 @@ const zh = {
     subtitle: '自定义你的使用体验',
     sections: {
       appearance: '外观',
-      notifications: '通知',
       soundHaptics: '声音与触感',
       more: '更多',
     },
@@ -182,16 +181,6 @@ const zh = {
       title: '深色模式',
       toLight: '切换到浅色主题',
       toDark: '切换到深色主题',
-    },
-    notifications: {
-      push: {
-        title: '推送通知',
-        description: '获取提醒与更新',
-      },
-      focusReminders: {
-        title: '专注提醒',
-        description: '每日提醒你专注',
-      },
     },
     sound: {
       soundEffects: {

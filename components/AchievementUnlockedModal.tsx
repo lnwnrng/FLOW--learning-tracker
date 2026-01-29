@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Sparkles, Trophy, ChevronRight } from 'lucide-react';
 import type { AchievementType } from '../types';
 import { useTranslation } from 'react-i18next';
+import { triggerFeedback } from '../services/feedbackService';
 import { achievementDisplay } from './achievementDisplay';
 
 interface AchievementUnlockedModalProps {
@@ -35,6 +36,7 @@ const AchievementUnlockedModal: React.FC<AchievementUnlockedModalProps> = ({
     const particlesRef = useRef<Particle[]>([]);
     const animationRef = useRef<number>();
     const [showContent, setShowContent] = useState(false);
+    const didPlayFeedback = useRef(false);
 
     const confettiColors = [
         '#22d3ee',
@@ -71,7 +73,12 @@ const AchievementUnlockedModal: React.FC<AchievementUnlockedModalProps> = ({
         if (!isOpen) {
             setShowContent(false);
             particlesRef.current = [];
+            didPlayFeedback.current = false;
             return;
+        }
+        if (!didPlayFeedback.current) {
+            triggerFeedback('achievement');
+            didPlayFeedback.current = true;
         }
 
         const canvas = canvasRef.current;
@@ -261,7 +268,10 @@ const AchievementUnlockedModal: React.FC<AchievementUnlockedModalProps> = ({
                 <div className="flex gap-3">
                     {onView && (
                         <button
-                            onClick={onView}
+                            onClick={() => {
+                                triggerFeedback('nav');
+                                onView();
+                            }}
                             className="flex-1 py-3 rounded-2xl font-semibold text-sm text-white transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
                             style={{
                                 background: 'linear-gradient(135deg, #38bdf8 0%, #8b5cf6 100%)',
@@ -273,7 +283,10 @@ const AchievementUnlockedModal: React.FC<AchievementUnlockedModalProps> = ({
                         </button>
                     )}
                     <button
-                        onClick={onClose}
+                        onClick={() => {
+                            triggerFeedback('tap');
+                            onClose();
+                        }}
                         className="flex-1 py-3 rounded-2xl font-semibold text-sm transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
                         style={{
                             background: 'rgba(248, 250, 252, 0.9)',

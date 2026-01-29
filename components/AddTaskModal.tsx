@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Clock, Calendar, Bell, CheckSquare } from 'lucide-react';
 import { Task } from '../types';
 import { useTranslation } from 'react-i18next';
+import { triggerFeedback } from '../services/feedbackService';
 import { useToast } from './ToastNotification';
 
 interface AddTaskModalProps {
@@ -95,7 +96,10 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
             {/* Backdrop */}
             <div
                 className="absolute inset-0 flow-backdrop"
-                onClick={onClose}
+                onClick={() => {
+                    triggerFeedback('tap');
+                    onClose();
+                }}
             />
 
             {/* Modal */}
@@ -109,7 +113,10 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                 <div className="flex items-center justify-between p-6 pb-4">
                     <h2 className="text-xl font-bold text-slate-800">{t('tasks.newTask')}</h2>
                     <button
-                        onClick={onClose}
+                        onClick={() => {
+                            triggerFeedback('tap');
+                            onClose();
+                        }}
                         className="p-2 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-slate-600 transition-colors"
                     >
                         <X size={20} />
@@ -151,7 +158,10 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                                 return (
                                     <button
                                         key={cat.id}
-                                        onClick={() => setCategory(cat.id)}
+                                        onClick={() => {
+                                            triggerFeedback('tap');
+                                            setCategory(cat.id);
+                                        }}
                                         className={`
                       flex flex-col items-center justify-center gap-2 py-4 rounded-2xl
                       border-2 transition-all duration-200
@@ -227,7 +237,10 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                 {/* Footer */}
                 <div className="p-6 pt-2">
                     <button
-                        onClick={handleSave}
+                        onClick={() => {
+                            triggerFeedback('tap');
+                            handleSave();
+                        }}
                         disabled={!title.trim()}
                         className="
               w-full py-4 rounded-2xl

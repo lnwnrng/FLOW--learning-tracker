@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
 import {
     ArrowLeft,
-    Bell,
     Moon,
     Sun,
     Volume2,
     VolumeX,
     Vibrate,
-    Clock,
     Globe,
     Shield,
     HelpCircle,
@@ -18,6 +16,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useSettingsStore } from '../stores';
 import { normalizeLanguage } from '../i18n';
+import { playSoundEffect, triggerHaptic, triggerFeedback } from '../services/feedbackService';
 
 interface SettingsPageProps {
     onBack: () => void;
@@ -159,14 +158,23 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 flow-backdrop-strong" onClick={onClose}>
+        <div
+            className="fixed inset-0 z-[120] flex items-center justify-center p-4 flow-backdrop-strong"
+            onClick={() => {
+                triggerFeedback('tap');
+                onClose();
+            }}
+        >
             <div
                 className="relative w-full max-w-sm rounded-3xl p-6 animate-fade-in flow-modal"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="absolute inset-0 pointer-events-none rounded-3xl overflow-hidden flow-modal-highlight" />
                 <button
-                    onClick={onClose}
+                    onClick={() => {
+                        triggerFeedback('tap');
+                        onClose();
+                    }}
                     className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-white/20 transition-all"
                 >
                     <X size={18} />
@@ -184,28 +192,30 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onBack }) => {
     const { t, i18n } = useTranslation();
 
     // Settings state
-    const [notifications, setNotifications] = useState(true);
-    const [sound, setSound] = useState(true);
-    const [vibration, setVibration] = useState(true);
-    const [focusReminder, setFocusReminder] = useState(true);
     const { settings, setSetting } = useSettingsStore();
     const themeMode = settings['themeMode'] === 'dark' ? 'dark' : 'light';
     const isDarkMode = themeMode === 'dark';
     const selectedLanguage = normalizeLanguage(settings['language']);
+    const soundEnabled = settings['soundEffects'] !== 'off';
+    const hapticEnabled = settings['hapticFeedback'] !== 'off';
     const [activeModal, setActiveModal] = useState<'language' | 'privacy' | 'support' | 'feedback' | null>(null);
 
     const handleSelectLanguage = (language: 'en' | 'zh') => {
         i18n.changeLanguage(language).catch(() => undefined);
         void setSetting('language', language);
+        triggerFeedback('toggleOn');
         setActiveModal(null);
     };
 
     return (
-        <div className="animate-fade-in space-y-6">
+        <div className="animate-fade-in space-y-5">
             {/* Header */}
             <div className="flex items-center gap-4">
                 <button
-                    onClick={onBack}
+                    onClick={() => {
+                        triggerFeedback('nav');
+                        onBack();
+                    }}
                     className="w-10 h-10 glass-card rounded-xl flex items-center justify-center text-slate-600 hover:text-slate-800 transition-colors ring-1 ring-white/10"
                 >
                     <ArrowLeft size={20} />
@@ -221,30 +231,12 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onBack }) => {
                 <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wide px-1">{t('settings.sections.appearance')}</h3>
                 <ThemeModeToggle
                     enabled={isDarkMode}
-                    onToggle={(next) => void setSetting('themeMode', next ? 'dark' : 'light')}
+                    onToggle={(next) => {
+                        void setSetting('themeMode', next ? 'dark' : 'light');
+                        triggerFeedback(next ? 'toggleOn' : 'toggleOff');
+                    }}
                     title={t('settings.darkMode.title')}
                     description={isDarkMode ? t('settings.darkMode.toLight') : t('settings.darkMode.toDark')}
-                />
-            </div>
-
-            {/* Notifications Section */}
-            <div className="space-y-3">
-                <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wide px-1">{t('settings.sections.notifications')}</h3>
-                <SettingToggle
-                    icon={Bell}
-                    title={t('settings.notifications.push.title')}
-                    description={t('settings.notifications.push.description')}
-                    enabled={notifications}
-                    onToggle={() => setNotifications(!notifications)}
-                    colorClass="from-amber-400 to-orange-500"
-                />
-                <SettingToggle
-                    icon={Clock}
-                    title={t('settings.notifications.focusReminders.title')}
-                    description={t('settings.notifications.focusReminders.description')}
-                    enabled={focusReminder}
-                    onToggle={() => setFocusReminder(!focusReminder)}
-                    colorClass="from-sky-400 to-blue-500"
                 />
             </div>
 
@@ -252,19 +244,31 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onBack }) => {
             <div className="space-y-3">
                 <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wide px-1">{t('settings.sections.soundHaptics')}</h3>
                 <SettingToggle
-                    icon={sound ? Volume2 : VolumeX}
+                    icon={soundEnabled ? Volume2 : VolumeX}
                     title={t('settings.sound.soundEffects.title')}
                     description={t('settings.sound.soundEffects.description')}
-                    enabled={sound}
-                    onToggle={() => setSound(!sound)}
+                    enabled={soundEnabled}
+                    onToggle={() => {
+                        const next = !soundEnabled;
+                        void setSetting('soundEffects', next ? 'on' : 'off');
+                        if (next) {
+                            playSoundEffect('toggleOn', { force: true });
+                        }
+                    }}
                     colorClass="from-emerald-400 to-green-500"
                 />
                 <SettingToggle
                     icon={Vibrate}
                     title={t('settings.sound.haptics.title')}
                     description={t('settings.sound.haptics.description')}
-                    enabled={vibration}
-                    onToggle={() => setVibration(!vibration)}
+                    enabled={hapticEnabled}
+                    onToggle={() => {
+                        const next = !hapticEnabled;
+                        void setSetting('hapticFeedback', next ? 'on' : 'off');
+                        if (next) {
+                            triggerHaptic('toggleOn', { force: true });
+                        }
+                    }}
                     colorClass="from-rose-400 to-pink-500"
                 />
             </div>
@@ -276,25 +280,37 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onBack }) => {
                     icon={Globe}
                     title={t('settings.moreItems.language')}
                     value={selectedLanguage === 'zh' ? t('settings.language.valueZh') : t('settings.language.valueEn')}
-                    onClick={() => setActiveModal('language')}
+                    onClick={() => {
+                        triggerFeedback('modal');
+                        setActiveModal('language');
+                    }}
                     colorClass="from-cyan-400 to-teal-500"
                 />
                 <SettingOption
                     icon={Shield}
                     title={t('settings.moreItems.privacy')}
-                    onClick={() => setActiveModal('privacy')}
+                    onClick={() => {
+                        triggerFeedback('modal');
+                        setActiveModal('privacy');
+                    }}
                     colorClass="from-slate-500 to-slate-600"
                 />
                 <SettingOption
                     icon={HelpCircle}
                     title={t('settings.moreItems.support')}
-                    onClick={() => setActiveModal('support')}
+                    onClick={() => {
+                        triggerFeedback('modal');
+                        setActiveModal('support');
+                    }}
                     colorClass="from-violet-400 to-purple-500"
                 />
                 <SettingOption
                     icon={MessageSquare}
                     title={t('settings.moreItems.feedback')}
-                    onClick={() => setActiveModal('feedback')}
+                    onClick={() => {
+                        triggerFeedback('modal');
+                        setActiveModal('feedback');
+                    }}
                     colorClass="from-pink-400 to-rose-500"
                 />
             </div>

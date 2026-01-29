@@ -3,6 +3,7 @@ import { Circle, Calendar, Bell, Plus, ChevronDown, Clock } from 'lucide-react';
 import { Task } from '../types';
 import { useTranslation } from 'react-i18next';
 import { languageToLocale, normalizeLanguage } from '../i18n';
+import { triggerFeedback } from '../services/feedbackService';
 
 interface TaskListProps {
   tasks?: Task[];
@@ -95,7 +96,10 @@ const TaskList: React.FC<TaskListProps> = ({
           <ChevronDown size={18} className="text-slate-400 group-hover:text-slate-600 transition-colors" />
         </button>
         <button
-          onClick={onAddTask}
+          onClick={() => {
+            triggerFeedback('tap');
+            onAddTask?.();
+          }}
           className="bg-violet-500 text-white p-3 rounded-full shadow-lg shadow-violet-500/25 hover:bg-violet-600 hover:shadow-xl hover:shadow-violet-500/30 transition-all transform active:scale-95"
         >
           <Plus size={20} />
@@ -143,7 +147,10 @@ const TaskList: React.FC<TaskListProps> = ({
 
                   {/* Category Icon */}
                   <button
-                    onClick={() => onToggleTask?.(task.id)}
+                    onClick={() => {
+                      triggerFeedback(task.completed ? 'toggleOff' : 'toggleOn');
+                      onToggleTask?.(task.id);
+                    }}
                     className="flex-shrink-0"
                   >
                     {task.completed ? (

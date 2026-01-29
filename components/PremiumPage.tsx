@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Crown, Check, Sparkles, Zap, Shield, Clock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { triggerFeedback } from '../services/feedbackService';
 
 interface PremiumPageProps {
     onBack: () => void;
@@ -58,7 +59,10 @@ const PremiumPage: React.FC<PremiumPageProps> = ({
                 {/* Header */}
                 <div className="flex items-center gap-4">
                     <button
-                        onClick={onBack}
+                        onClick={() => {
+                            triggerFeedback('nav');
+                            onBack();
+                        }}
                         className="w-10 h-10 glass-card rounded-xl flex items-center justify-center text-slate-600 hover:text-slate-800 transition-colors"
                     >
                         <ArrowLeft size={20} />
@@ -109,7 +113,10 @@ const PremiumPage: React.FC<PremiumPageProps> = ({
             {/* Header */}
                 <div className="flex items-center gap-4">
                     <button
-                        onClick={onBack}
+                        onClick={() => {
+                            triggerFeedback('nav');
+                            onBack();
+                        }}
                         className="w-10 h-10 glass-card rounded-xl flex items-center justify-center text-slate-600 hover:text-slate-800 transition-colors"
                     >
                         <ArrowLeft size={20} />
@@ -136,7 +143,10 @@ const PremiumPage: React.FC<PremiumPageProps> = ({
                 {(['monthly', 'yearly'] as const).map((plan) => (
                     <button
                         key={plan}
-                        onClick={() => setSelectedPlan(plan)}
+                        onClick={() => {
+                            triggerFeedback('toggleOn');
+                            setSelectedPlan(plan);
+                        }}
                         className={`glass-card rounded-2xl p-4 ring-1 transition-all ${selectedPlan === plan
                                 ? 'ring-amber-400 ring-2'
                                 : 'ring-white/10'
@@ -179,7 +189,10 @@ const PremiumPage: React.FC<PremiumPageProps> = ({
 
             {/* CTA Button */}
             <button
-                onClick={onUpgrade}
+                onClick={() => {
+                    triggerFeedback('success');
+                    onUpgrade?.();
+                }}
                 className="w-full py-4 rounded-2xl font-bold text-white text-lg shadow-lg shadow-amber-500/30 transition-all hover:shadow-xl hover:shadow-amber-500/40 active:scale-[0.98]"
                 style={{
                     background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)',

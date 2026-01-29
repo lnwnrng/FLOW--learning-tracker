@@ -11,6 +11,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useSessionStore, useUserStore } from '../stores';
 import { languageToLocale, normalizeLanguage } from '../i18n';
+import { triggerFeedback } from '../services/feedbackService';
 
 interface HeatmapDataItem {
     date: string; // YYYY-MM-DD
@@ -228,14 +229,20 @@ const StatsPage: React.FC = () => {
                 <h1 className="text-2xl font-bold text-slate-800">{t('stats.title')}</h1>
                 <div className="flex items-center gap-1 stats-year-selector rounded-xl p-1">
                     <button
-                        onClick={() => setSelectedYear(y => y - 1)}
+                        onClick={() => {
+                            triggerFeedback('nav');
+                            setSelectedYear(y => y - 1);
+                        }}
                         className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-700 transition-colors"
                     >
                         <ChevronLeft size={18} />
                     </button>
                     <span className="px-3 font-semibold text-slate-700">{selectedYear}</span>
                     <button
-                        onClick={() => setSelectedYear(y => Math.min(y + 1, new Date().getFullYear()))}
+                        onClick={() => {
+                            triggerFeedback('nav');
+                            setSelectedYear(y => Math.min(y + 1, new Date().getFullYear()));
+                        }}
                         className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-700 transition-colors"
                         disabled={selectedYear >= new Date().getFullYear()}
                     >

@@ -1,6 +1,7 @@
 import React from 'react';
 import { LogOut, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { triggerFeedback } from '../services/feedbackService';
 
 interface SignOutModalProps {
     isOpen: boolean;
@@ -19,7 +20,10 @@ const SignOutModal: React.FC<SignOutModalProps> = ({
     return (
         <div
             className="fixed inset-0 z-50 flex items-center justify-center p-4 flow-backdrop-strong"
-            onClick={onCancel}
+            onClick={() => {
+                triggerFeedback('tap');
+                onCancel();
+            }}
         >
             <div
                 className="relative w-full max-w-sm rounded-3xl p-6 animate-fade-in flow-modal"
@@ -28,7 +32,10 @@ const SignOutModal: React.FC<SignOutModalProps> = ({
                 <div className="absolute inset-0 pointer-events-none rounded-3xl overflow-hidden flow-modal-highlight" />
                 {/* Close button */}
                 <button
-                    onClick={onCancel}
+                    onClick={() => {
+                        triggerFeedback('tap');
+                        onCancel();
+                    }}
                     className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-white/20 transition-all"
                 >
                     <X size={18} />
@@ -59,11 +66,14 @@ const SignOutModal: React.FC<SignOutModalProps> = ({
 
                 {/* Buttons */}
                 <div className="space-y-3">
-                    <button
-                        onClick={onConfirm}
-                        className="w-full py-3 px-4 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
-                        style={{
-                            background: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
+                <button
+                    onClick={() => {
+                        triggerFeedback('warning');
+                        onConfirm();
+                    }}
+                    className="w-full py-3 px-4 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
+                    style={{
+                        background: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
                             color: 'white',
                             boxShadow: '0 4px 20px -4px rgba(139, 92, 246, 0.4)',
                         }}
@@ -72,10 +82,13 @@ const SignOutModal: React.FC<SignOutModalProps> = ({
                         {t('signOut.confirm')}
                     </button>
 
-                    <button
-                        onClick={onCancel}
-                        className="w-full py-3 px-4 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
-                        style={{
+                <button
+                    onClick={() => {
+                        triggerFeedback('tap');
+                        onCancel();
+                    }}
+                    className="w-full py-3 px-4 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                    style={{
                             background: 'rgba(241, 245, 249, 0.9)',
                             border: '1px solid rgba(226, 232, 240, 0.8)',
                             color: '#64748b',

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowLeft, Trophy } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { triggerFeedback } from '../services/feedbackService';
 import { useUserStore } from '../stores';
 import { getAchievements, markAchievementsSeen } from '../services/achievementService';
 import type { AchievementInfo } from '../types';
@@ -127,7 +128,10 @@ const AchievementsPage: React.FC<AchievementsPageProps> = ({
             {/* Header */}
             <div className="flex items-center gap-4">
                 <button
-                    onClick={onBack}
+                    onClick={() => {
+                        triggerFeedback('nav');
+                        onBack();
+                    }}
                     className="w-10 h-10 glass-card rounded-xl flex items-center justify-center text-slate-600 hover:text-slate-800 transition-colors"
                 >
                     <ArrowLeft size={20} />

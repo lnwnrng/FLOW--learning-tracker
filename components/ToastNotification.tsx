@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { CheckCircle2, Info, AlertTriangle, XCircle, X } from 'lucide-react';
+import { triggerFeedback } from '../services/feedbackService';
 
 // Toast types
 export type ToastType = 'success' | 'info' | 'warning' | 'error';
@@ -36,6 +37,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const showToast = useCallback((toast: Omit<Toast, 'id'>) => {
         const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         setToasts((prev) => [...prev, { ...toast, id }]);
+        triggerFeedback(toast.type);
     }, []);
 
     const dismissToast = useCallback((id: string) => {
@@ -127,6 +129,7 @@ const ToastItem: React.FC<ToastItemProps> = ({ toast, onDismiss }) => {
     }, [duration, toast.id, onDismiss]);
 
     const handleDismiss = () => {
+        triggerFeedback('tap');
         setIsExiting(true);
         setTimeout(() => onDismiss(toast.id), 300);
     };

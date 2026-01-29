@@ -2,6 +2,7 @@ import React from 'react';
 import { Home, BarChart2, User, CalendarDays } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Tab } from '../types';
+import { triggerFeedback } from '../services/feedbackService';
 
 interface DockProps {
   activeTab: Tab;
@@ -96,7 +97,10 @@ const Dock: React.FC<DockProps> = ({ activeTab, setActiveTab, isTimerRunning = f
               return (
                 <button
                   key={item.id}
-                  onClick={() => setActiveTab(item.id)}
+                  onClick={() => {
+                    triggerFeedback('nav');
+                    setActiveTab(item.id);
+                  }}
                   className={`
                     group relative flex items-center justify-center
                     w-14 h-14 md:w-12 md:h-12 rounded-full 
@@ -124,7 +128,10 @@ const Dock: React.FC<DockProps> = ({ activeTab, setActiveTab, isTimerRunning = f
             return (
               <button
                 key={item.id}
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => {
+                  triggerFeedback('nav');
+                  setActiveTab(item.id);
+                }}
                 className={`
                   group relative flex items-center justify-center
                   w-11 h-11 md:w-10 md:h-10 rounded-2xl
