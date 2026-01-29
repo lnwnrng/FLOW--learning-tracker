@@ -3,7 +3,7 @@ mod db;
 mod models;
 
 use db::Database;
-use tauri::Manager;
+use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -30,12 +30,30 @@ pub fn run() {
             // Store database in app state
             app.manage(database);
 
+            // Create splashscreen window
+            let splash_url = WebviewUrl::App("splash.html".into());
+            let _ = WebviewWindowBuilder::new(app.handle(), "splashscreen", splash_url)
+                .title("FLOW")
+                .decorations(false)
+                .transparent(true)
+                .resizable(false)
+                .always_on_top(true)
+                .center()
+                .inner_size(520.0, 360.0)
+                .build();
+
+            if let Some(main_window) = app.get_webview_window("main") {
+                let _ = main_window.hide();
+            }
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             // User commands
             commands::get_user,
             commands::get_users,
+            commands::set_current_user,
+            commands::clear_current_user,
             commands::create_user,
             commands::update_user,
             commands::delete_user,
@@ -65,6 +83,8 @@ pub fn run() {
             // Data export commands
             commands::export_all_data,
             commands::import_data,
+            // App lifecycle commands
+            commands::close_splashscreen,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

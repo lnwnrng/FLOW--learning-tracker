@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+    <title>FLOW</title>
+    <style>
+      :root {
+        color-scheme: light;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        font-family: "Outfit", "Segoe UI", "Helvetica Neue", sans-serif;
+      }
+
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background:
+          radial-gradient(120% 120% at 10% 10%, rgba(139, 92, 246, 0.22), transparent 55%),
+          radial-gradient(120% 120% at 90% 20%, rgba(34, 211, 238, 0.2), transparent 55%),
+          radial-gradient(120% 120% at 20% 90%, rgba(248, 113, 113, 0.15), transparent 55%),
+          linear-gradient(140deg, #f5f3ff 0%, #eef2ff 40%, #f8fafc 100%);
+        overflow: hidden;
+      }
+
+      .shell {
+        position: relative;
+        width: 86%;
+        max-width: 420px;
+        padding: 28px 28px 26px;
+        border-radius: 28px;
+        background: rgba(255, 255, 255, 0.68);
+        backdrop-filter: blur(28px) saturate(170%);
+        box-shadow:
+          0 30px 70px -40px rgba(15, 23, 42, 0.4),
+          inset 0 1px 2px rgba(255, 255, 255, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.7);
+      }
+
+      .glow {
+        position: absolute;
+        inset: 0;
+        border-radius: 28px;
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.12), transparent 55%);
+        pointer-events: none;
+      }
+
+      .logo {
+        width: 74px;
+        height: 74px;
+        border-radius: 22px;
+        margin: 0 auto 18px;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(135deg, #8b5cf6 0%, #60a5fa 55%, #22d3ee 100%);
+        box-shadow: 0 16px 30px -16px rgba(79, 70, 229, 0.65);
+      }
+
+      .logo svg {
+        width: 42px;
+        height: 42px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 26px;
+        letter-spacing: 0.12em;
+        text-align: center;
+        color: #1e293b;
+      }
+
+      p {
+        margin: 10px 0 18px;
+        text-align: center;
+        color: rgba(71, 85, 105, 0.75);
+        font-size: 13px;
+      }
+
+      .progress-track {
+        width: 100%;
+        height: 6px;
+        border-radius: 999px;
+        background: rgba(148, 163, 184, 0.2);
+        overflow: hidden;
+        margin-bottom: 14px;
+      }
+
+      .progress-bar {
+        height: 100%;
+        width: 48%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #8b5cf6, #60a5fa, #22d3ee);
+        animation: flow 1.8s ease-in-out infinite;
+      }
+
+      .loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        color: rgba(100, 116, 139, 0.8);
+        font-size: 12px;
+        letter-spacing: 0.04em;
+      }
+
+      .dots {
+        display: inline-flex;
+        gap: 4px;
+      }
+
+      .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 999px;
+        background: rgba(148, 163, 184, 0.9);
+        animation: bounce 1.2s ease-in-out infinite;
+      }
+
+      .dot:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+
+      .dot:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+
+      @keyframes flow {
+        0% {
+          transform: translateX(-60%);
+          opacity: 0.7;
+        }
+        50% {
+          transform: translateX(20%);
+          opacity: 1;
+        }
+        100% {
+          transform: translateX(120%);
+          opacity: 0.7;
+        }
+      }
+
+      @keyframes bounce {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-4px);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .progress-bar,
+        .dot {
+          animation: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <div class="glow"></div>
+      <div class="logo">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M6 14C6 14 9 10 13 10C17 10 17 14 21 14C25 14 28 10 28 10"
+            stroke="white"
+            stroke-width="3"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M6 20C6 20 9 16 13 16C17 16 17 20 21 20C25 20 28 16 28 16"
+            stroke="white"
+            stroke-width="3"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            opacity="0.6"
+          />
+        </svg>
+      </div>
+      <h1>FLOW</h1>
+      <p>Preparing your focus space</p>
+      <div class="progress-track">
+        <div class="progress-bar"></div>
+      </div>
+      <div class="loading">
+        <span>Loading</span>
+        <span class="dots">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </span>
+      </div>
+    </div>
+  </body>
+</html>

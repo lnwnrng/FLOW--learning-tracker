@@ -14,7 +14,8 @@ interface UserState {
     createUser: (request: CreateUserRequest) => Promise<void>;
     updateUser: (request: UpdateUserRequest) => Promise<void>;
     setUser: (user: User | null) => void;
-    signOut: () => void;
+    rememberUser: (userId: string) => Promise<void>;
+    signOut: () => Promise<void>;
     clearError: () => void;
 }
 
@@ -91,10 +92,24 @@ export const useUserStore = create<UserState>((set, get) => ({
         set({ user, isInitialized: true, isLoading: false, error: null });
     },
 
-    signOut: () => {
-        // Clear user state without deleting user data
-        // This allows the user to return to onboarding and sign back in
-        set({ user: null, isInitialized: true, isLoading: false, error: null });
+    rememberUser: async (userId: string) => {
+        try {
+            await userService.setCurrentUser(userId);
+        } catch (error) {
+            set({ error: error instanceof Error ? error.message : String(error) });
+        }
+    },
+
+    signOut: async () => {
+        try {
+            await userService.clearCurrentUser();
+        } catch (error) {
+            set({ error: error instanceof Error ? error.message : String(error) });
+        } finally {
+            // Clear user state without deleting user data
+            // This allows the user to return to onboarding and sign back in
+            set({ user: null, isInitialized: true, isLoading: false, error: null });
+        }
     },
 
     clearError: () => set({ error: null }),

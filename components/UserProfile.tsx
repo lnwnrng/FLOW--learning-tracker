@@ -21,7 +21,7 @@ interface UserProfileProps {
     stats: UserStats;
     unseenAchievementsCount?: number;
     onUpdateUser: (user: Partial<User>) => void;
-    onSignOut: () => void;
+    onSignOut: () => void | Promise<void>;
     onNavigate?: (page: 'achievements' | 'settings' | 'premium') => void;
 }
 

@@ -12,10 +12,12 @@
   "app": {
     "windows": [
       {
+        "label": "main",
         "title": "FLOW - Learning Tracker",
         "width": 800,
         "height": 600,
         "resizable": true,
+        "visible": false,
         "fullscreen": false
       }
     ],

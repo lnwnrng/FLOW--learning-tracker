@@ -45,6 +45,7 @@ fn run_migrations(conn: &Connection) -> Result<()> {
         ("001_initial", include_str!("../../migrations/001_initial.sql")),
         ("002_add_avatar_path", include_str!("../../migrations/002_add_avatar_path.sql")),
         ("003_add_achievement_seen_at", include_str!("../../migrations/003_add_achievement_seen_at.sql")),
+        ("004_add_app_settings", include_str!("../../migrations/004_add_app_settings.sql")),
     ];
 
     for (name, sql) in migrations {

@@ -16,6 +16,20 @@ export async function getUsers(): Promise<User[]> {
 }
 
 /**
+ * Set current user (remember last selection)
+ */
+export async function setCurrentUser(userId: string): Promise<void> {
+    return await invoke<void>('set_current_user', { userId });
+}
+
+/**
+ * Clear current user (stop auto-enter on next launch)
+ */
+export async function clearCurrentUser(): Promise<void> {
+    return await invoke<void>('clear_current_user');
+}
+
+/**
  * Create a new user
  */
 export async function createUser(request: CreateUserRequest): Promise<User> {

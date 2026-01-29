@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Crown } from 'lucide-react';
+import { invoke } from '@tauri-apps/api/core';
 import Dock from './components/Dock';
 import Calendar from './components/Calendar';
 import TaskList from './components/TaskList';
@@ -17,7 +18,7 @@ import AchievementUnlockedModal from './components/AchievementUnlockedModal';
 import { Tab, Task, TaskCategory, AchievementType, User } from './types';
 import { useUserStore, useSessionStore, useTaskStore } from './stores';
 import { checkAndUnlockAchievements, getUnseenAchievementsCount } from './services/achievementService';
-import { getUsers } from './services/userService';
+import { getUsers, setCurrentUser } from './services/userService';
 
 // Category to color mapping for calendar dots
 const categoryDotColors: Record<TaskCategory, string> = {
@@ -231,6 +232,10 @@ const App: React.FC = () => {
   }, [initialize]);
 
   useEffect(() => {
+    invoke('close_splashscreen').catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
     if (!user && isInitialized) {
       loadExistingUsers();
     }
@@ -379,6 +384,10 @@ const App: React.FC = () => {
   const handleCreateUser = async (name: string) => {
     try {
       await createUser({ name });
+      const createdUser = useUserStore.getState().user;
+      if (createdUser) {
+        await setCurrentUser(createdUser.id);
+      }
     } catch (error) {
       console.error('Failed to create user:', error);
     }
@@ -386,6 +395,7 @@ const App: React.FC = () => {
 
   const handleSelectUser = (selectedUser: User) => {
     setUser(selectedUser);
+    setCurrentUser(selectedUser.id).catch(() => undefined);
   };
 
   // Filter tasks for selected date
