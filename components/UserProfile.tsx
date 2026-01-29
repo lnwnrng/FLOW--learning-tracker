@@ -14,6 +14,8 @@ import {
     LogOut
 } from 'lucide-react';
 import { User, UserStats } from '../types';
+import { useTranslation } from 'react-i18next';
+import { languageToLocale, normalizeLanguage } from '../i18n';
 import SignOutModal from './SignOutModal';
 
 interface UserProfileProps {
@@ -33,6 +35,10 @@ const UserProfile: React.FC<UserProfileProps> = ({
     onSignOut,
     onNavigate
 }) => {
+    const { t, i18n } = useTranslation();
+    const language = normalizeLanguage(i18n.language);
+    const locale = languageToLocale(language);
+
     const [isEditing, setIsEditing] = useState(false);
     const [editName, setEditName] = useState(user.name);
     const [editEmail, setEditEmail] = useState(user.email ?? '');
@@ -65,36 +71,36 @@ const UserProfile: React.FC<UserProfileProps> = ({
         const hours = Math.floor(minutes / 60);
         const mins = minutes % 60;
         if (hours > 0) {
-            return `${hours}h ${mins}m`;
+            return `${hours}${t('time.hour')} ${mins}${t('time.minute')}`;
         }
-        return `${mins}m`;
+        return `${mins}${t('time.minute')}`;
     };
 
     const statCards = [
         {
             icon: Clock,
-            label: 'Focus Time',
+            label: t('profile.focusTime'),
             value: formatTime(stats.totalFocusTime),
             color: 'from-violet-500 to-purple-600',
             bgColor: 'bg-violet-50',
         },
         {
             icon: Flame,
-            label: 'Current Streak',
-            value: `${stats.currentStreak} days`,
+            label: t('profile.currentStreak'),
+            value: t('profile.days', { count: stats.currentStreak }),
             color: 'from-orange-500 to-red-500',
             bgColor: 'bg-orange-50',
         },
         {
             icon: Trophy,
-            label: 'Sessions',
+            label: t('profile.sessions'),
             value: stats.totalSessions.toString(),
             color: 'from-amber-500 to-yellow-500',
             bgColor: 'bg-amber-50',
         },
         {
             icon: Target,
-            label: 'Tasks Done',
+            label: t('profile.tasksDone'),
             value: stats.tasksCompleted.toString(),
             color: 'from-emerald-500 to-green-500',
             bgColor: 'bg-emerald-50',
@@ -103,14 +109,14 @@ const UserProfile: React.FC<UserProfileProps> = ({
 
     const menuItems = [
         {
-            label: 'Achievements',
+            label: t('profile.achievements'),
             icon: Trophy,
-            badge: unseenAchievementsCount > 0 ? `${unseenAchievementsCount} new` : undefined,
+            badge: unseenAchievementsCount > 0 ? t('profile.newBadge', { count: unseenAchievementsCount }) : undefined,
             action: 'achievements' as const
         },
-        { label: 'Settings', icon: Settings, action: 'settings' as const },
+        { label: t('profile.settings'), icon: Settings, action: 'settings' as const },
         {
-            label: user.isPremium ? 'Premium Active' : 'Upgrade to Premium',
+            label: user.isPremium ? t('profile.premiumActive') : t('profile.upgradePremium'),
             icon: Crown,
             highlight: !user.isPremium,
             action: 'premium' as const
@@ -192,27 +198,27 @@ const UserProfile: React.FC<UserProfileProps> = ({
                                 value={editName}
                                 onChange={(e) => setEditName(e.target.value)}
                                 className="w-full text-center text-xl font-bold bg-white/20 text-white placeholder:text-white/60 rounded-xl px-4 py-2 border border-white/30 focus:outline-none focus:border-white/60"
-                                placeholder="Your name"
+                                placeholder={t('profile.placeholders.name')}
                             />
                             <input
                                 type="email"
                                 value={editEmail}
                                 onChange={(e) => setEditEmail(e.target.value)}
                                 className="w-full text-center text-sm bg-white/20 text-white/90 placeholder:text-white/60 rounded-xl px-4 py-2 border border-white/30 focus:outline-none focus:border-white/60"
-                                placeholder="your@email.com"
+                                placeholder={t('profile.placeholders.email')}
                             />
                             <div className="flex gap-2 justify-center pt-2">
                                 <button
                                     onClick={handleCancel}
                                     className="px-4 py-2 bg-white/20 text-white rounded-xl hover:bg-white/30 transition-colors flex items-center gap-1"
                                 >
-                                    <X size={16} /> Cancel
+                                    <X size={16} /> {t('common.cancel')}
                                 </button>
                                 <button
                                     onClick={handleSave}
                                     className="px-4 py-2 bg-white text-violet-600 rounded-xl hover:bg-white/90 transition-colors font-semibold flex items-center gap-1"
                                 >
-                                    <Check size={16} /> Save
+                                    <Check size={16} /> {t('common.save')}
                                 </button>
                             </div>
                         </div>
@@ -230,7 +236,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
                                         }}
                                     >
                                         <Crown size={12} />
-                                        Premium
+                                        {t('premium.title')}
                                     </span>
                                 )}
                             </div>
@@ -239,7 +245,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
                                 onClick={() => setIsEditing(true)}
                                 className="mt-3 px-4 py-1.5 bg-white/20 text-white text-sm rounded-full hover:bg-white/30 transition-colors inline-flex items-center gap-1.5"
                             >
-                                <Edit3 size={14} /> Edit Profile
+                                <Edit3 size={14} /> {t('profile.editProfile')}
                             </button>
                         </>
                     )}
@@ -247,7 +253,9 @@ const UserProfile: React.FC<UserProfileProps> = ({
 
                 {/* Member since */}
                 <p className="text-center text-white/50 text-xs mt-4">
-                    Member since {new Date(user.joinDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                    {t('profile.memberSince', {
+                        date: new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(new Date(user.joinDate)),
+                    })}
                 </p>
             </div>
 
@@ -312,7 +320,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
                 className="w-full flex items-center justify-center gap-2 p-4 rounded-2xl transition-all hover:scale-[1.01] active:scale-[0.99] font-semibold signout-button"
             >
                 <LogOut size={20} />
-                Sign Out
+                {t('profile.signOut')}
             </button>
 
             {/* Sign Out Modal */}

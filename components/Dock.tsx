@@ -1,5 +1,6 @@
 import React from 'react';
 import { Home, BarChart2, User, CalendarDays } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Tab } from '../types';
 
 interface DockProps {
@@ -63,12 +64,14 @@ const navItemColors = {
 };
 
 const Dock: React.FC<DockProps> = ({ activeTab, setActiveTab, isTimerRunning = false }) => {
+  const { t } = useTranslation();
+
   const navItems = [
-    { id: Tab.HOME, icon: Home, label: 'Home' },
-    { id: Tab.STATS, icon: BarChart2, label: 'Stats' },
-    { id: Tab.FOCUS, icon: null, label: 'Focus', isPrimary: true },
-    { id: Tab.USER, icon: User, label: 'Profile' },
-    { id: Tab.SCHEDULE, icon: CalendarDays, label: 'Schedule' },
+    { id: Tab.HOME, icon: Home, label: t('dock.home') },
+    { id: Tab.STATS, icon: BarChart2, label: t('dock.stats') },
+    { id: Tab.FOCUS, icon: null, label: t('dock.focus'), isPrimary: true },
+    { id: Tab.USER, icon: User, label: t('dock.profile') },
+    { id: Tab.SCHEDULE, icon: CalendarDays, label: t('dock.schedule') },
   ];
 
   return (
@@ -111,7 +114,7 @@ const Dock: React.FC<DockProps> = ({ activeTab, setActiveTab, isTimerRunning = f
 
                   {/* Tooltip */}
                   <span className="absolute left-full ml-4 px-3 py-1.5 bg-slate-800 text-white text-xs font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0 hidden md:block whitespace-nowrap pointer-events-none shadow-lg">
-                    Start Flow
+                    {t('dock.startFlow')}
                   </span>
                 </button>
               );

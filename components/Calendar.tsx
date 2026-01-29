@@ -1,5 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { languageToLocale, normalizeLanguage } from '../i18n';
 
 interface CalendarEvent {
   date: string; // YYYY-MM-DD format to match task date
@@ -17,10 +19,22 @@ const Calendar: React.FC<CalendarProps> = ({
   selectedDate,
   onSelectDate
 }) => {
+  const { t, i18n } = useTranslation();
+  const language = normalizeLanguage(i18n.language);
+  const locale = languageToLocale(language);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const today = new Date();
 
-  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const weekDays = useMemo(() => {
+    const weekdayStyle: Intl.DateTimeFormatOptions['weekday'] = language === 'en' ? 'short' : 'narrow';
+    const formatter = new Intl.DateTimeFormat(locale, { weekday: weekdayStyle });
+    const base = new Date(2021, 7, 1, 12); // Sunday
+    return Array.from({ length: 7 }, (_, i) => {
+      const date = new Date(base);
+      date.setDate(base.getDate() + i);
+      return formatter.format(date);
+    });
+  }, [language, locale]);
 
   // Calculate days in the current month view
   const calendarDays = useMemo(() => {
@@ -94,9 +108,7 @@ const Calendar: React.FC<CalendarProps> = ({
 
   const formatHeader = () => {
     // Show the current viewing month, not the selected date
-    const month = currentMonth.toLocaleString('en-US', { month: 'long' });
-    const year = currentMonth.getFullYear();
-    return `${month} ${year}`;
+    return new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(currentMonth);
   };
 
   return (
@@ -112,12 +124,14 @@ const Calendar: React.FC<CalendarProps> = ({
         <div className="flex gap-0.5">
           <button
             onClick={goToPrevMonth}
+            aria-label={t('calendar.prevMonth')}
             className="p-2 hover:bg-white/80 rounded-xl text-slate-400 hover:text-slate-700 transition-all duration-200"
           >
             <ChevronLeft size={18} />
           </button>
           <button
             onClick={goToNextMonth}
+            aria-label={t('calendar.nextMonth')}
             className="p-2 hover:bg-white/80 rounded-xl text-slate-400 hover:text-slate-700 transition-all duration-200"
           >
             <ChevronRight size={18} />

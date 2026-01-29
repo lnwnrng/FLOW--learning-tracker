@@ -1,5 +1,6 @@
 import React from 'react';
 import { LogOut, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface SignOutModalProps {
     isOpen: boolean;
@@ -12,6 +13,7 @@ const SignOutModal: React.FC<SignOutModalProps> = ({
     onConfirm,
     onCancel,
 }) => {
+    const { t } = useTranslation();
     if (!isOpen) return null;
 
     return (
@@ -47,12 +49,12 @@ const SignOutModal: React.FC<SignOutModalProps> = ({
 
                 {/* Title */}
                 <h3 className="text-xl font-bold text-center text-slate-800 mb-2">
-                    Sign Out
+                    {t('signOut.title')}
                 </h3>
 
                 {/* Description */}
                 <p className="text-center text-slate-500 text-sm mb-6">
-                    Are you sure you want to sign out? You can sign back in anytime to access your data.
+                    {t('signOut.description')}
                 </p>
 
                 {/* Buttons */}
@@ -67,7 +69,7 @@ const SignOutModal: React.FC<SignOutModalProps> = ({
                         }}
                     >
                         <LogOut size={18} />
-                        Sign Out
+                        {t('signOut.confirm')}
                     </button>
 
                     <button
@@ -79,7 +81,7 @@ const SignOutModal: React.FC<SignOutModalProps> = ({
                             color: '#64748b',
                         }}
                     >
-                        Cancel
+                        {t('signOut.cancel')}
                     </button>
                 </div>
             </div>

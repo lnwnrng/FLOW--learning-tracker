@@ -1,5 +1,7 @@
 import React, { useMemo, useState, useCallback } from 'react';
 import { useSettingsStore } from '../stores';
+import { useTranslation } from 'react-i18next';
+import { languageToLocale, normalizeLanguage } from '../i18n';
 
 interface HomePageProps {
     userName?: string;
@@ -16,25 +18,27 @@ const HomePage: React.FC<HomePageProps> = ({
     weekData = [45, 120, 90, 30, 80, 165, 60],
     currentStreak = 7,
 }) => {
+    const { t, i18n } = useTranslation();
     const { settings } = useSettingsStore();
     const isDarkMode = settings['themeMode'] === 'dark';
+    const locale = languageToLocale(normalizeLanguage(i18n.language));
 
     // Get greeting based on time
     const greeting = useMemo(() => {
         const hour = new Date().getHours();
-        if (hour < 12) return 'Good morning';
-        if (hour < 18) return 'Good afternoon';
-        return 'Good evening';
-    }, []);
+        if (hour < 12) return t('home.greeting.morning');
+        if (hour < 18) return t('home.greeting.afternoon');
+        return t('home.greeting.evening');
+    }, [t]);
 
     // Format date
     const dateString = useMemo(() => {
-        return new Date().toLocaleDateString('en-US', {
+        return new Intl.DateTimeFormat(locale, {
             weekday: 'long',
             month: 'long',
             day: 'numeric',
-        });
-    }, []);
+        }).format(new Date());
+    }, [locale]);
 
     // Format time
     const formatTime = (minutes: number) => {
@@ -44,7 +48,15 @@ const HomePage: React.FC<HomePageProps> = ({
     };
 
     const todayTime = formatTime(todayMinutes);
-    const weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+    const weekDays = useMemo(() => {
+        const formatter = new Intl.DateTimeFormat(locale, { weekday: 'narrow' });
+        const base = new Date(2021, 7, 1, 12); // Sunday
+        return Array.from({ length: 7 }, (_, i) => {
+            const date = new Date(base);
+            date.setDate(base.getDate() + i);
+            return formatter.format(date);
+        });
+    }, [locale]);
     const todayIndex = new Date().getDay();
 
     // Calculate max for normalization
@@ -185,12 +197,12 @@ const HomePage: React.FC<HomePageProps> = ({
                                     <path d="M4 16C4 16 6 13 9 13C12 13 12 16 15 16C18 16 20 13 20 13" stroke="white" strokeWidth="2.5" strokeLinecap="round" opacity="0.6" />
                                 </svg>
                             </div>
-                            <span className="text-sm font-semibold text-slate-600">Today's Flow</span>
+                            <span className="text-sm font-semibold text-slate-600">{t('home.todaysFlow')}</span>
                         </div>
                         <div className="text-right">
-                            <span className="text-xs text-slate-400">Weekly Total</span>
+                            <span className="text-xs text-slate-400">{t('home.weeklyTotal')}</span>
                             <p className="text-sm font-bold text-slate-600">
-                                {Math.floor(weekData.reduce((a, b) => a + b, 0) / 60)}h {weekData.reduce((a, b) => a + b, 0) % 60}m
+                                {Math.floor(weekData.reduce((a, b) => a + b, 0) / 60)}{t('home.unitHour')} {weekData.reduce((a, b) => a + b, 0) % 60}{t('home.unitMinute')}
                             </p>
                         </div>
                     </div>
@@ -200,11 +212,11 @@ const HomePage: React.FC<HomePageProps> = ({
                         <span className="text-6xl font-bold text-slate-800 tracking-tight">
                             {todayTime.hours}
                         </span>
-                        <span className="text-2xl font-semibold text-slate-500 mr-2">h</span>
+                        <span className="text-2xl font-semibold text-slate-500 mr-2">{t('home.unitHour')}</span>
                         <span className="text-6xl font-bold text-slate-800 tracking-tight">
                             {todayTime.minutes.toString().padStart(2, '0')}
                         </span>
-                        <span className="text-2xl font-semibold text-slate-500">m</span>
+                        <span className="text-2xl font-semibold text-slate-500">{t('home.unitMinute')}</span>
                     </div>
 
                     {/* Flow Curve Visualization - Flip Card */}
@@ -218,7 +230,7 @@ const HomePage: React.FC<HomePageProps> = ({
                             <div className="flip-card-face flip-card-back flip-card-glass p-4">
                                 <div className="h-full flex flex-col justify-between">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">This Week's Flow</span>
+                                        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{t('home.thisWeeksFlow')}</span>
                                         {/* Flip hint icon */}
                                         <div className="flip-hint">
                                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-slate-400">
@@ -244,8 +256,8 @@ const HomePage: React.FC<HomePageProps> = ({
                                                 </defs>
                                             </svg>
                                         </div>
-                                        <p className="text-sm font-medium text-slate-600">Tap to view your flow</p>
-                                        <p className="text-xs text-slate-400 mt-1">Weekly progress chart</p>
+                                        <p className="text-sm font-medium text-slate-600">{t('home.tapToViewFlow')}</p>
+                                        <p className="text-xs text-slate-400 mt-1">{t('home.weeklyProgressChart')}</p>
                                     </div>
                                 </div>
                             </div>
@@ -253,7 +265,7 @@ const HomePage: React.FC<HomePageProps> = ({
                             {/* Front Face (the chart - revealed on flip) */}
                             <div className="flip-card-face flip-card-front flip-card-glass p-4">
                                 <div className="flex items-center justify-between mb-3">
-                                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">This Week's Flow</span>
+                                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{t('home.thisWeeksFlow')}</span>
                                     {/* Tap to flip back hint */}
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-slate-400">
                                         <path d="M9 14L4 9L9 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />

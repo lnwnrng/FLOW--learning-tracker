@@ -15,7 +15,9 @@ import {
     ChevronRight,
     X
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useSettingsStore } from '../stores';
+import { normalizeLanguage } from '../i18n';
 
 interface SettingsPageProps {
     onBack: () => void;
@@ -96,18 +98,20 @@ const SettingOption: React.FC<SettingOptionProps> = ({
 interface ThemeModeToggleProps {
     enabled: boolean;
     onToggle: (next: boolean) => void;
+    title: string;
+    description: string;
 }
 
-const ThemeModeToggle: React.FC<ThemeModeToggleProps> = ({ enabled, onToggle }) => (
+const ThemeModeToggle: React.FC<ThemeModeToggleProps> = ({ enabled, onToggle, title, description }) => (
     <div className="glass-card rounded-2xl p-4 ring-1 ring-white/10">
         <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
                 {enabled ? <Moon size={22} className="text-white" /> : <Sun size={22} className="text-white" />}
             </div>
             <div className="flex-1 min-w-0">
-                <h4 className="font-semibold text-slate-800">Dark Mode</h4>
+                <h4 className="font-semibold text-slate-800">{title}</h4>
                 <p className="text-sm text-slate-500 mt-0.5">
-                    {enabled ? 'Switch to light theme' : 'Switch to dark theme'}
+                    {description}
                 </p>
             </div>
             <label className="theme-switch">
@@ -177,6 +181,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 };
 
 const SettingsPage: React.FC<SettingsPageProps> = ({ onBack }) => {
+    const { t, i18n } = useTranslation();
+
     // Settings state
     const [notifications, setNotifications] = useState(true);
     const [sound, setSound] = useState(true);
@@ -185,9 +191,14 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onBack }) => {
     const { settings, setSetting } = useSettingsStore();
     const themeMode = settings['themeMode'] === 'dark' ? 'dark' : 'light';
     const isDarkMode = themeMode === 'dark';
-    const rawLanguage = settings['language'];
-    const selectedLanguage = rawLanguage === 'zh' ? 'zh' : 'en';
+    const selectedLanguage = normalizeLanguage(settings['language']);
     const [activeModal, setActiveModal] = useState<'language' | 'privacy' | 'support' | 'feedback' | null>(null);
+
+    const handleSelectLanguage = (language: 'en' | 'zh') => {
+        i18n.changeLanguage(language).catch(() => undefined);
+        void setSetting('language', language);
+        setActiveModal(null);
+    };
 
     return (
         <div className="animate-fade-in space-y-6">
@@ -200,35 +211,37 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onBack }) => {
                     <ArrowLeft size={20} />
                 </button>
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-800">Settings</h1>
-                    <p className="text-sm text-slate-500">Customize your experience</p>
+                    <h1 className="text-2xl font-bold text-slate-800">{t('settings.title')}</h1>
+                    <p className="text-sm text-slate-500">{t('settings.subtitle')}</p>
                 </div>
             </div>
 
             {/* Appearance Section */}
             <div className="space-y-3">
-                <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wide px-1">Appearance</h3>
+                <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wide px-1">{t('settings.sections.appearance')}</h3>
                 <ThemeModeToggle
                     enabled={isDarkMode}
                     onToggle={(next) => void setSetting('themeMode', next ? 'dark' : 'light')}
+                    title={t('settings.darkMode.title')}
+                    description={isDarkMode ? t('settings.darkMode.toLight') : t('settings.darkMode.toDark')}
                 />
             </div>
 
             {/* Notifications Section */}
             <div className="space-y-3">
-                <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wide px-1">Notifications</h3>
+                <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wide px-1">{t('settings.sections.notifications')}</h3>
                 <SettingToggle
                     icon={Bell}
-                    title="Push Notifications"
-                    description="Get reminders and updates"
+                    title={t('settings.notifications.push.title')}
+                    description={t('settings.notifications.push.description')}
                     enabled={notifications}
                     onToggle={() => setNotifications(!notifications)}
                     colorClass="from-amber-400 to-orange-500"
                 />
                 <SettingToggle
                     icon={Clock}
-                    title="Focus Reminders"
-                    description="Daily reminder to focus"
+                    title={t('settings.notifications.focusReminders.title')}
+                    description={t('settings.notifications.focusReminders.description')}
                     enabled={focusReminder}
                     onToggle={() => setFocusReminder(!focusReminder)}
                     colorClass="from-sky-400 to-blue-500"
@@ -237,19 +250,19 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onBack }) => {
 
             {/* Sound & Haptics Section */}
             <div className="space-y-3">
-                <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wide px-1">Sound & Haptics</h3>
+                <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wide px-1">{t('settings.sections.soundHaptics')}</h3>
                 <SettingToggle
                     icon={sound ? Volume2 : VolumeX}
-                    title="Sound Effects"
-                    description="Play sounds on actions"
+                    title={t('settings.sound.soundEffects.title')}
+                    description={t('settings.sound.soundEffects.description')}
                     enabled={sound}
                     onToggle={() => setSound(!sound)}
                     colorClass="from-emerald-400 to-green-500"
                 />
                 <SettingToggle
                     icon={Vibrate}
-                    title="Haptic Feedback"
-                    description="Vibrate on interactions"
+                    title={t('settings.sound.haptics.title')}
+                    description={t('settings.sound.haptics.description')}
                     enabled={vibration}
                     onToggle={() => setVibration(!vibration)}
                     colorClass="from-rose-400 to-pink-500"
@@ -258,29 +271,29 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onBack }) => {
 
             {/* More Options Section */}
             <div className="space-y-3">
-                <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wide px-1">More</h3>
+                <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wide px-1">{t('settings.sections.more')}</h3>
                 <SettingOption
                     icon={Globe}
-                    title="Language"
-                    value={selectedLanguage === 'zh' ? '中文' : 'English'}
+                    title={t('settings.moreItems.language')}
+                    value={selectedLanguage === 'zh' ? t('settings.language.valueZh') : t('settings.language.valueEn')}
                     onClick={() => setActiveModal('language')}
                     colorClass="from-cyan-400 to-teal-500"
                 />
                 <SettingOption
                     icon={Shield}
-                    title="Privacy Policy"
+                    title={t('settings.moreItems.privacy')}
                     onClick={() => setActiveModal('privacy')}
                     colorClass="from-slate-500 to-slate-600"
                 />
                 <SettingOption
                     icon={HelpCircle}
-                    title="Help & Support"
+                    title={t('settings.moreItems.support')}
                     onClick={() => setActiveModal('support')}
                     colorClass="from-violet-400 to-purple-500"
                 />
                 <SettingOption
                     icon={MessageSquare}
-                    title="Send Feedback"
+                    title={t('settings.moreItems.feedback')}
                     onClick={() => setActiveModal('feedback')}
                     colorClass="from-pink-400 to-rose-500"
                 />
@@ -288,37 +301,37 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onBack }) => {
 
             {/* App Version */}
             <div className="text-center py-4">
-                <p className="text-sm text-slate-400">Flow v1.0.0</p>
-                <p className="text-xs text-slate-300 mt-1">Made with love</p>
+                <p className="text-sm text-slate-400">{t('settings.appVersion')}</p>
+                <p className="text-xs text-slate-300 mt-1">{t('settings.madeWithLove')}</p>
             </div>
 
             <SettingsModal
                 isOpen={activeModal === 'language'}
-                title="Language"
+                title={t('settings.language.modalTitle')}
                 onClose={() => setActiveModal(null)}
             >
                 <div className="space-y-3">
-                    <p>Select your preferred language.</p>
+                    <p>{t('settings.language.modalDesc')}</p>
                     <div className="grid grid-cols-2 gap-2">
                         <button
-                            onClick={() => void setSetting('language', 'en')}
+                            onClick={() => handleSelectLanguage('en')}
                             className={`rounded-2xl px-4 py-2 text-sm font-semibold transition-all border ${
                                 selectedLanguage === 'en'
                                     ? 'bg-slate-900/90 text-white border-slate-900/80'
                                     : 'bg-white/40 text-slate-600 border-white/50'
                             }`}
                         >
-                            English
+                            {t('settings.language.valueEn')}
                         </button>
                         <button
-                            onClick={() => void setSetting('language', 'zh')}
+                            onClick={() => handleSelectLanguage('zh')}
                             className={`rounded-2xl px-4 py-2 text-sm font-semibold transition-all border ${
                                 selectedLanguage === 'zh'
                                     ? 'bg-slate-900/90 text-white border-slate-900/80'
                                     : 'bg-white/40 text-slate-600 border-white/50'
                             }`}
                         >
-                            中文
+                            {t('settings.language.valueZh')}
                         </button>
                     </div>
                 </div>
@@ -326,61 +339,53 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onBack }) => {
 
             <SettingsModal
                 isOpen={activeModal === 'privacy'}
-                title="Privacy Policy"
+                title={t('settings.privacy.title')}
                 onClose={() => setActiveModal(null)}
             >
-                <p>
-                    Flow stores your data locally on your device by default. We do not upload your
-                    focus sessions, tasks, or settings unless you explicitly enable sync in a future update.
-                </p>
+                <p>{t('settings.privacy.p1')}</p>
                 <div className="space-y-2">
-                    <p>What we store locally:</p>
+                    <p>{t('settings.privacy.p2Title')}</p>
                     <ul className="list-disc pl-5 space-y-1">
-                        <li>Focus sessions and statistics</li>
-                        <li>Tasks and schedules</li>
-                        <li>Achievements and preferences</li>
+                        <li>{t('settings.privacy.list.sessions')}</li>
+                        <li>{t('settings.privacy.list.tasks')}</li>
+                        <li>{t('settings.privacy.list.preferences')}</li>
                     </ul>
                 </div>
-                <p>
-                    If you delete a user profile, all related data will be removed from this device.
-                </p>
+                <p>{t('settings.privacy.p3')}</p>
             </SettingsModal>
 
             <SettingsModal
                 isOpen={activeModal === 'support'}
-                title="Help & Support"
+                title={t('settings.support.title')}
                 onClose={() => setActiveModal(null)}
             >
-                <p>Need help getting the most out of Flow?</p>
+                <p>{t('settings.support.p1')}</p>
                 <div className="space-y-2">
-                    <p>Quick tips:</p>
+                    <p>{t('settings.support.tipsTitle')}</p>
                     <ul className="list-disc pl-5 space-y-1">
-                        <li>Tap the focus orb to start or pause a session.</li>
-                        <li>Sessions under 1 minute are not recorded.</li>
-                        <li>Unlock achievements by completing consistent sessions.</li>
+                        <li>{t('settings.support.tips.t1')}</li>
+                        <li>{t('settings.support.tips.t2')}</li>
+                        <li>{t('settings.support.tips.t3')}</li>
                     </ul>
                 </div>
-                <p>More help content will be added in upcoming releases.</p>
+                <p>{t('settings.support.p2')}</p>
             </SettingsModal>
 
             <SettingsModal
                 isOpen={activeModal === 'feedback'}
-                title="Send Feedback"
+                title={t('settings.feedback.title')}
                 onClose={() => setActiveModal(null)}
             >
-                <p>
-                    We would love to hear your thoughts. Tell us what you like, what feels off,
-                    and what you want next.
-                </p>
+                <p>{t('settings.feedback.p1')}</p>
                 <div className="space-y-2">
-                    <p>Suggested topics:</p>
+                    <p>{t('settings.feedback.topicsTitle')}</p>
                     <ul className="list-disc pl-5 space-y-1">
-                        <li>UI/UX suggestions</li>
-                        <li>Feature requests</li>
-                        <li>Bug reports</li>
+                        <li>{t('settings.feedback.topics.t1')}</li>
+                        <li>{t('settings.feedback.topics.t2')}</li>
+                        <li>{t('settings.feedback.topics.t3')}</li>
                     </ul>
                 </div>
-                <p>Feedback submission will be connected in a future update.</p>
+                <p>{t('settings.feedback.p2')}</p>
             </SettingsModal>
         </div>
     );

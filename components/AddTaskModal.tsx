@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Clock, Calendar, Bell, CheckSquare } from 'lucide-react';
 import { Task } from '../types';
+import { useTranslation } from 'react-i18next';
 import { useToast } from './ToastNotification';
 
 interface AddTaskModalProps {
@@ -14,7 +15,7 @@ const categories = [
     {
         id: 'Reminder' as const,
         icon: Bell,
-        label: 'Reminder',
+        labelKey: 'tasks.categories.reminder',
         bgColor: 'bg-sky-50',
         borderColor: 'border-sky-200',
         activeColor: 'bg-sky-500',
@@ -23,7 +24,7 @@ const categories = [
     {
         id: 'To Do' as const,
         icon: CheckSquare,
-        label: 'To Do',
+        labelKey: 'tasks.categories.todo',
         bgColor: 'bg-emerald-50',
         borderColor: 'border-emerald-200',
         activeColor: 'bg-emerald-500',
@@ -32,7 +33,7 @@ const categories = [
     {
         id: 'Event' as const,
         icon: Calendar,
-        label: 'Event',
+        labelKey: 'tasks.categories.event',
         bgColor: 'bg-violet-50',
         borderColor: 'border-violet-200',
         activeColor: 'bg-violet-500',
@@ -46,6 +47,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
     onSave,
     selectedDate
 }) => {
+    const { t } = useTranslation();
     const [title, setTitle] = useState('');
     const [category, setCategory] = useState<Task['category']>('To Do');
     const [startTime, setStartTime] = useState('09:00');
@@ -81,8 +83,8 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
         // Show success toast
         showToast({
             type: 'success',
-            title: 'Task Created',
-            message: `"${title.trim()}" added to your schedule.`,
+            title: t('tasks.toast.createdTitle'),
+            message: t('tasks.toast.addedToSchedule', { title: title.trim() }),
         });
     };
 
@@ -105,7 +107,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
       ">
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 pb-4">
-                    <h2 className="text-xl font-bold text-slate-800">New Task</h2>
+                    <h2 className="text-xl font-bold text-slate-800">{t('tasks.newTask')}</h2>
                     <button
                         onClick={onClose}
                         className="p-2 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-slate-600 transition-colors"
@@ -119,13 +121,13 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                     {/* Title Input */}
                     <div>
                         <label className="block text-sm font-semibold text-slate-600 mb-2">
-                            Task Title
+                            {t('tasks.taskTitle')}
                         </label>
                         <input
                             type="text"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
-                            placeholder="What do you want to do?"
+                            placeholder={t('tasks.taskTitlePlaceholder')}
                             className="
                 w-full px-4 py-3.5 rounded-2xl 
                 bg-slate-50 border-2 border-slate-100
@@ -140,7 +142,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                     {/* Category Selection */}
                     <div>
                         <label className="block text-sm font-semibold text-slate-600 mb-2">
-                            Category
+                            {t('tasks.category')}
                         </label>
                         <div className="grid grid-cols-3 gap-2">
                             {categories.map((cat) => {
@@ -166,7 +168,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                                             <Icon size={20} className={isSelected ? 'text-white' : 'text-slate-500'} />
                                         </div>
                                         <span className={`text-sm font-medium ${isSelected ? cat.textColor : 'text-slate-500'}`}>
-                                            {cat.label}
+                                            {t(cat.labelKey)}
                                         </span>
                                     </button>
                                 );
@@ -178,7 +180,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                     <div>
                         <label className="block text-sm font-semibold text-slate-600 mb-2">
                             <Clock size={14} className="inline mr-1.5 -mt-0.5" />
-                            Time
+                            {t('tasks.time')}
                         </label>
                         <div className="flex items-center gap-3">
                             <input
@@ -193,7 +195,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                   transition-all
                 "
                             />
-                            <span className="text-slate-400 font-medium">to</span>
+                            <span className="text-slate-400 font-medium">{t('tasks.to')}</span>
                             <input
                                 type="time"
                                 value={endTime}
@@ -215,9 +217,9 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
               p-4 rounded-2xl border-2 
               ${selectedCategoryInfo?.bgColor} ${selectedCategoryInfo?.borderColor}
             `}>
-                            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Preview</p>
+                            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">{t('tasks.preview')}</p>
                             <p className="font-bold text-slate-800">{title}</p>
-                            <p className={`text-sm ${selectedCategoryInfo?.textColor} font-medium`}>{category}</p>
+                            <p className={`text-sm ${selectedCategoryInfo?.textColor} font-medium`}>{getCategoryLabel(category, t)}</p>
                         </div>
                     )}
                 </div>
@@ -236,7 +238,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
               shadow-lg shadow-violet-500/30
             "
                     >
-                        Add Task
+                        {t('tasks.addTask')}
                     </button>
                 </div>
             </div>
@@ -245,3 +247,16 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
 };
 
 export default AddTaskModal;
+
+function getCategoryLabel(category: Task['category'], t: (key: string) => string) {
+    switch (category) {
+        case 'Reminder':
+            return t('tasks.categories.reminder');
+        case 'To Do':
+            return t('tasks.categories.todo');
+        case 'Event':
+            return t('tasks.categories.event');
+        default:
+            return category;
+    }
+}

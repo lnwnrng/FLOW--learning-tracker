@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Crown, Check, Sparkles } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface PremiumSuccessModalProps {
     isOpen: boolean;
@@ -24,6 +25,7 @@ const PremiumSuccessModal: React.FC<PremiumSuccessModalProps> = ({
     isOpen,
     onClose,
 }) => {
+    const { t } = useTranslation();
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const particlesRef = useRef<Particle[]>([]);
     const animationRef = useRef<number>();
@@ -31,10 +33,10 @@ const PremiumSuccessModal: React.FC<PremiumSuccessModalProps> = ({
     const [checkedItems, setCheckedItems] = useState<number[]>([]);
 
     const benefits = [
-        'Unlimited Focus Sessions',
-        'Advanced Statistics',
-        'Cloud Sync Across Devices',
-        'Custom Themes & Colors',
+        t('premium.features.unlimitedSessions'),
+        t('premium.features.advancedStats'),
+        t('premium.features.cloudSyncAcross'),
+        t('premium.features.customThemesColors'),
     ];
 
     // Confetti colors - golden/amber palette
@@ -256,10 +258,10 @@ const PremiumSuccessModal: React.FC<PremiumSuccessModalProps> = ({
 
                 {/* Title */}
                 <h2 className="text-2xl font-bold text-center text-slate-800 mb-2">
-                    Welcome to Premium!
+                    {t('premium.successModal.title')}
                 </h2>
                 <p className="text-center text-slate-500 text-sm mb-6">
-                    You now have access to all premium features
+                    {t('premium.successModal.subtitle')}
                 </p>
 
                 {/* Benefits List */}
@@ -314,7 +316,7 @@ const PremiumSuccessModal: React.FC<PremiumSuccessModalProps> = ({
                         boxShadow: '0 8px 24px -8px rgba(251, 191, 36, 0.5)',
                     }}
                 >
-                    Start Exploring
+                    {t('premium.successModal.startExploring')}
                 </button>
             </div>
         </div>

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Sparkles, Trophy, ChevronRight } from 'lucide-react';
 import type { AchievementType } from '../types';
+import { useTranslation } from 'react-i18next';
 import { achievementDisplay } from './achievementDisplay';
 
 interface AchievementUnlockedModalProps {
@@ -29,6 +30,7 @@ const AchievementUnlockedModal: React.FC<AchievementUnlockedModalProps> = ({
     onClose,
     onView,
 }) => {
+    const { t } = useTranslation();
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const particlesRef = useRef<Particle[]>([]);
     const animationRef = useRef<number>();
@@ -221,16 +223,18 @@ const AchievementUnlockedModal: React.FC<AchievementUnlockedModalProps> = ({
                 </div>
 
                 <h2 className="text-2xl font-bold text-center text-slate-800 mb-2">
-                    Achievement Unlocked
+                    {t('achievementUnlocked.title')}
                 </h2>
                 <p className="text-center text-slate-500 text-sm mb-6">
-                    You unlocked {achievements.length} new {achievements.length === 1 ? 'achievement' : 'achievements'}.
+                    {t('achievementUnlocked.message', { count: achievements.length })}
                 </p>
 
                 <div className="space-y-3 mb-6">
                     {achievements.map((type) => {
                         const display = achievementDisplay[type];
                         const Icon = display?.icon ?? Trophy;
+                        const title = t(`achievements.items.${type}.title`, { defaultValue: type });
+                        const description = t(`achievements.items.${type}.description`, { defaultValue: '' });
                         return (
                             <div
                                 key={type}
@@ -244,8 +248,10 @@ const AchievementUnlockedModal: React.FC<AchievementUnlockedModalProps> = ({
                                     <Icon size={20} className="text-white" />
                                 </div>
                                 <div className="flex-1">
-                                    <p className="text-sm font-semibold text-slate-800">{display?.title ?? type}</p>
-                                    <p className="text-xs text-slate-500">{display?.description ?? 'Achievement unlocked'}</p>
+                                    <p className="text-sm font-semibold text-slate-800">{title}</p>
+                                    {description && (
+                                        <p className="text-xs text-slate-500">{description}</p>
+                                    )}
                                 </div>
                             </div>
                         );
@@ -262,7 +268,7 @@ const AchievementUnlockedModal: React.FC<AchievementUnlockedModalProps> = ({
                                 boxShadow: '0 8px 24px -8px rgba(56, 189, 248, 0.45)',
                             }}
                         >
-                            View
+                            {t('achievementUnlocked.view')}
                             <ChevronRight size={16} />
                         </button>
                     )}
@@ -275,7 +281,7 @@ const AchievementUnlockedModal: React.FC<AchievementUnlockedModalProps> = ({
                             color: '#475569',
                         }}
                     >
-                        Continue
+                        {t('achievementUnlocked.continue')}
                     </button>
                 </div>
             </div>

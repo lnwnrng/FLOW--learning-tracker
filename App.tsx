@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Crown } from 'lucide-react';
 import { invoke } from '@tauri-apps/api/core';
+import { useTranslation } from 'react-i18next';
 import Dock from './components/Dock';
 import Calendar from './components/Calendar';
 import TaskList from './components/TaskList';
@@ -19,6 +20,7 @@ import { Tab, Task, TaskCategory, AchievementType, User } from './types';
 import { useUserStore, useSessionStore, useTaskStore, useSettingsStore } from './stores';
 import { checkAndUnlockAchievements, getUnseenAchievementsCount } from './services/achievementService';
 import { getUsers, setCurrentUser } from './services/userService';
+import i18n, { normalizeLanguage, languageToLocale } from './i18n';
 
 // Category to color mapping for calendar dots
 const categoryDotColors: Record<TaskCategory, string> = {
@@ -46,6 +48,7 @@ const OnboardingScreen: React.FC<{
   isLoading,
   existingUsers
 }) => {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -75,21 +78,21 @@ const OnboardingScreen: React.FC<{
               </svg>
             </div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-violet-600 to-sky-600 bg-clip-text text-transparent">
-              Welcome to Flow
+              {t('onboarding.title')}
             </h1>
-            <p className="text-slate-600 mt-2">Your personal focus companion</p>
+            <p className="text-slate-600 mt-2">{t('onboarding.subtitle')}</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
-                What should we call you?
+                {t('onboarding.nameLabel')}
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Enter your name"
+                placeholder={t('onboarding.namePlaceholder')}
                 className="w-full px-4 py-3 rounded-xl bg-white/80 border border-slate-200 focus:border-violet-400 focus:ring-2 focus:ring-violet-200 outline-none transition-all"
                 autoFocus
               />
@@ -100,14 +103,14 @@ const OnboardingScreen: React.FC<{
               disabled={!name.trim() || isLoading}
               className="w-full py-3 px-6 bg-gradient-to-r from-violet-500 to-sky-500 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              {isLoading ? 'Creating...' : 'Get Started'}
+              {isLoading ? t('onboarding.creating') : t('onboarding.getStarted')}
             </button>
           </form>
 
           {existingUsers.length > 0 && (
             <div className="mt-6 pt-6 border-t border-slate-200/70">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-sm font-semibold text-slate-700">Continue with an existing profile</h2>
+                <h2 className="text-sm font-semibold text-slate-700">{t('onboarding.continueExisting')}</h2>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -151,12 +154,12 @@ const OnboardingScreen: React.FC<{
                               }}
                             >
                               <Crown size={10} />
-                              Premium
+                              {t('onboarding.premium')}
                             </span>
                           )}
                         </div>
                         <p className="text-xs text-slate-400 truncate">
-                          {existingUser.email || 'No email'}
+                          {existingUser.email || t('onboarding.noEmail')}
                         </p>
                       </div>
                     </div>
@@ -172,6 +175,7 @@ const OnboardingScreen: React.FC<{
 };
 
 const App: React.FC = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<Tab>(Tab.HOME);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
@@ -207,6 +211,7 @@ const App: React.FC = () => {
 
   const isTimerRunning = timerOrbState === 'running';
   const themeMode = settings['themeMode'] === 'dark' ? 'dark' : 'light';
+  const languageSetting = settings['language'];
 
   const refreshUnseenAchievements = useCallback(async () => {
     if (!user) return;
@@ -248,6 +253,14 @@ const App: React.FC = () => {
     root.dataset.theme = themeMode;
     root.style.colorScheme = themeMode;
   }, [themeMode]);
+
+  useEffect(() => {
+    const nextLanguage = user ? normalizeLanguage(languageSetting) : 'en';
+    if (i18n.language !== nextLanguage) {
+      i18n.changeLanguage(nextLanguage).catch(() => undefined);
+    }
+    document.documentElement.lang = languageToLocale(nextLanguage);
+  }, [languageSetting, user]);
 
   useEffect(() => {
     if (!user && isInitialized) {
@@ -369,8 +382,8 @@ const App: React.FC = () => {
           const secs = duration % 60;
           showToast({
             type: 'success',
-            title: 'Session Saved',
-            message: `Great focus! ${mins}m ${secs}s recorded.`,
+            title: t('timer.toast.savedTitle'),
+            message: t('timer.toast.savedMessage', { mins, secs }),
           });
         }
       } catch (error) {
@@ -378,21 +391,21 @@ const App: React.FC = () => {
         if (showToast) {
           showToast({
             type: 'info',
-            title: 'Save Failed',
-            message: 'Could not save session. Please try again.',
+            title: t('timer.toast.saveFailedTitle'),
+            message: t('timer.toast.saveFailedMessage'),
           });
         }
       }
     } else if (!isValidSession && showToast) {
       showToast({
         type: 'info',
-        title: 'Session Discarded',
-        message: 'Sessions under 1 minute are not recorded.',
+        title: t('timer.toast.discardedTitle'),
+        message: t('timer.toast.discardedMessage'),
       });
     }
 
     finishTimer();
-  }, [timerOrbState, timerElapsedTime, user, createSession, refreshUnseenAchievements]);
+  }, [timerOrbState, timerElapsedTime, user, createSession, refreshUnseenAchievements, t]);
 
   // Handle user creation
   const handleCreateUser = async (name: string) => {
@@ -470,7 +483,7 @@ const App: React.FC = () => {
   if (!isInitialized) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-violet-50 to-sky-50">
-        <div className="animate-pulse text-xl text-slate-600">Loading...</div>
+        <div className="animate-pulse text-xl text-slate-600">{t('common.loading')}</div>
       </div>
     );
   }

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Crown, Check, Sparkles, Zap, Shield, Clock } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface PremiumPageProps {
     onBack: () => void;
@@ -12,41 +13,42 @@ const PremiumPage: React.FC<PremiumPageProps> = ({
     isPremium = false,
     onUpgrade,
 }) => {
+    const { t } = useTranslation();
     const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('yearly');
 
     const features = [
         {
             icon: Clock,
-            title: 'Unlimited Focus Sessions',
-            description: 'No daily limits on focus time',
+            title: t('premium.features.unlimitedSessions'),
+            description: t('premium.features.unlimitedSessionsDesc'),
         },
         {
             icon: Sparkles,
-            title: 'Advanced Statistics',
-            description: 'Detailed insights and trends',
+            title: t('premium.features.advancedStats'),
+            description: t('premium.features.advancedStatsDesc'),
         },
         {
             icon: Shield,
-            title: 'Cloud Sync',
-            description: 'Access data across all devices',
+            title: t('premium.features.cloudSync'),
+            description: t('premium.features.cloudSyncDesc'),
         },
         {
             icon: Zap,
-            title: 'Custom Themes',
-            description: 'Personalize your experience',
+            title: t('premium.features.customThemes'),
+            description: t('premium.features.customThemesDesc'),
         },
     ];
 
     const plans = {
         monthly: {
             price: '$4.99',
-            period: '/month',
+            period: t('premium.periodMonth'),
             savings: null,
         },
         yearly: {
             price: '$39.99',
-            period: '/year',
-            savings: 'Save 33%',
+            period: t('premium.periodYear'),
+            savings: t('premium.savings'),
         },
     };
 
@@ -61,7 +63,7 @@ const PremiumPage: React.FC<PremiumPageProps> = ({
                     >
                         <ArrowLeft size={20} />
                     </button>
-                    <h1 className="text-2xl font-bold text-slate-800">Premium</h1>
+                    <h1 className="text-2xl font-bold text-slate-800">{t('premium.title')}</h1>
                 </div>
 
                 {/* Premium Active Card */}
@@ -70,18 +72,18 @@ const PremiumPage: React.FC<PremiumPageProps> = ({
                         <div className="w-20 h-20 bg-gradient-to-br from-amber-400 to-yellow-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
                             <Crown size={40} className="text-white" />
                         </div>
-                        <h2 className="text-2xl font-bold text-slate-800">You're Premium!</h2>
-                        <p className="text-slate-500 mt-2">Enjoy all premium features</p>
+                        <h2 className="text-2xl font-bold text-slate-800">{t('premium.activeTitle')}</h2>
+                        <p className="text-slate-500 mt-2">{t('premium.activeSubtitle')}</p>
                         <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 text-emerald-600 rounded-full text-sm font-semibold">
                             <Check size={16} />
-                            Active Subscription
+                            {t('premium.activeBadge')}
                         </div>
                     </div>
                 </div>
 
                 {/* Features */}
                 <div className="space-y-3">
-                    <h3 className="text-lg font-bold text-slate-800">Your Benefits</h3>
+                    <h3 className="text-lg font-bold text-slate-800">{t('premium.yourBenefits')}</h3>
                     {features.map((feature, index) => {
                         const Icon = feature.icon;
                         return (
@@ -105,15 +107,15 @@ const PremiumPage: React.FC<PremiumPageProps> = ({
     return (
         <div className="animate-fade-in space-y-6">
             {/* Header */}
-            <div className="flex items-center gap-4">
-                <button
-                    onClick={onBack}
-                    className="w-10 h-10 glass-card rounded-xl flex items-center justify-center text-slate-600 hover:text-slate-800 transition-colors"
-                >
-                    <ArrowLeft size={20} />
-                </button>
-                <h1 className="text-2xl font-bold text-slate-800">Upgrade to Premium</h1>
-            </div>
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={onBack}
+                        className="w-10 h-10 glass-card rounded-xl flex items-center justify-center text-slate-600 hover:text-slate-800 transition-colors"
+                    >
+                        <ArrowLeft size={20} />
+                    </button>
+                    <h1 className="text-2xl font-bold text-slate-800">{t('premium.upgradeTitle')}</h1>
+                </div>
 
             {/* Hero */}
             <div
@@ -125,8 +127,8 @@ const PremiumPage: React.FC<PremiumPageProps> = ({
                 <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <Crown size={32} className="text-white" />
                 </div>
-                <h2 className="text-2xl font-bold text-white">Flow Premium</h2>
-                <p className="text-white/80 mt-2">Unlock your full potential</p>
+                <h2 className="text-2xl font-bold text-white">{t('premium.heroTitle')}</h2>
+                <p className="text-white/80 mt-2">{t('premium.heroSubtitle')}</p>
             </div>
 
             {/* Plan Selection */}
@@ -141,7 +143,7 @@ const PremiumPage: React.FC<PremiumPageProps> = ({
                             }`}
                     >
                         <p className="text-xs text-slate-500 uppercase font-semibold">
-                            {plan === 'monthly' ? 'Monthly' : 'Yearly'}
+                            {plan === 'monthly' ? t('premium.planMonthly') : t('premium.planYearly')}
                         </p>
                         <p className="text-2xl font-bold text-slate-800 mt-1">
                             {plans[plan].price}
@@ -158,7 +160,7 @@ const PremiumPage: React.FC<PremiumPageProps> = ({
 
             {/* Features */}
             <div className="space-y-3">
-                <h3 className="text-lg font-bold text-slate-800">What you get</h3>
+                <h3 className="text-lg font-bold text-slate-800">{t('premium.whatYouGet')}</h3>
                 {features.map((feature, index) => {
                     const Icon = feature.icon;
                     return (
@@ -183,10 +185,10 @@ const PremiumPage: React.FC<PremiumPageProps> = ({
                     background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)',
                 }}
             >
-                Start Free Trial
+                {t('premium.startFreeTrial')}
             </button>
             <p className="text-center text-xs text-slate-400">
-                7-day free trial, cancel anytime
+                {t('premium.trialNote')}
             </p>
         </div>
     );

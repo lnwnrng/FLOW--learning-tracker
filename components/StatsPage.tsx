@@ -8,7 +8,9 @@ import {
     ChevronLeft,
     ChevronRight
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useSessionStore, useUserStore } from '../stores';
+import { languageToLocale, normalizeLanguage } from '../i18n';
 
 interface HeatmapDataItem {
     date: string; // YYYY-MM-DD
@@ -16,6 +18,10 @@ interface HeatmapDataItem {
 }
 
 const StatsPage: React.FC = () => {
+    const { t, i18n } = useTranslation();
+    const language = normalizeLanguage(i18n.language);
+    const locale = languageToLocale(language);
+
     const { user } = useUserStore();
     const {
         heatmapData: storeHeatmapData,
@@ -103,15 +109,15 @@ const StatsPage: React.FC = () => {
         // Generate month labels
         const monthLabels: { name: string; week: number }[] = [];
         let lastMonth = -1;
-        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
         weeks.forEach((week, weekIndex) => {
             const firstDayOfWeek = week[0]?.date;
             if (firstDayOfWeek) {
                 const month = firstDayOfWeek.getMonth();
                 if (month !== lastMonth && firstDayOfWeek.getFullYear() === selectedYear) {
+                    const monthName = new Intl.DateTimeFormat(locale, { month: 'short' }).format(firstDayOfWeek);
                     monthLabels.push({
-                        name: monthNames[month],
+                        name: monthName,
                         week: weekIndex,
                     });
                     lastMonth = month;
@@ -120,7 +126,7 @@ const StatsPage: React.FC = () => {
         });
 
         return { weeks, months: monthLabels, maxValue: maxVal };
-    }, [heatmapData, selectedYear]);
+    }, [heatmapData, selectedYear, locale]);
 
     const getColor = (value: number) => {
         if (value === 0) return 'heatmap-0';
@@ -135,12 +141,21 @@ const StatsPage: React.FC = () => {
         const hours = Math.floor(minutes / 60);
         const mins = minutes % 60;
         if (hours > 0) {
-            return `${hours}h ${mins}m`;
+            return `${hours}${t('time.hour')} ${mins}${t('time.minute')}`;
         }
-        return `${mins}m`;
+        return `${mins}${t('time.minute')}`;
     };
 
-    const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const weekDays = useMemo(() => {
+        const weekdayStyle: Intl.DateTimeFormatOptions['weekday'] = language === 'en' ? 'short' : 'narrow';
+        const formatter = new Intl.DateTimeFormat(locale, { weekday: weekdayStyle });
+        const base = new Date(2021, 7, 1, 12); // Sunday
+        return Array.from({ length: 7 }, (_, i) => {
+            const date = new Date(base);
+            date.setDate(base.getDate() + i);
+            return formatter.format(date);
+        });
+    }, [language, locale]);
     const todayStr = formatDateLocal(new Date());
 
     // Calculate this week and this month stats
@@ -174,33 +189,33 @@ const StatsPage: React.FC = () => {
     const summaryCards = [
         {
             icon: Clock,
-            label: 'Total Focus',
+            label: t('stats.cards.totalFocus'),
             value: formatTime(totalFocusTime),
-            subtext: `${totalSessions} sessions`,
+            subtext: t('stats.cards.sessions', { count: totalSessions }),
             color: 'from-violet-500 to-purple-600',
             bgColor: 'bg-violet-50',
         },
         {
             icon: Flame,
-            label: 'Current Streak',
-            value: `${currentStreak} days`,
-            subtext: `Best: ${longestStreak} days`,
+            label: t('stats.cards.currentStreak'),
+            value: t('stats.cards.days', { count: currentStreak }),
+            subtext: t('stats.cards.bestDays', { count: longestStreak }),
             color: 'from-orange-500 to-red-500',
             bgColor: 'bg-orange-50',
         },
         {
             icon: TrendingUp,
-            label: 'This Week',
+            label: t('stats.cards.thisWeek'),
             value: formatTime(thisWeekTime),
-            subtext: 'Focus time',
+            subtext: t('stats.cards.focusTime'),
             color: 'from-emerald-500 to-green-500',
             bgColor: 'bg-emerald-50',
         },
         {
             icon: Calendar,
-            label: 'This Month',
+            label: t('stats.cards.thisMonth'),
             value: formatTime(thisMonthTime),
-            subtext: 'Focus time',
+            subtext: t('stats.cards.focusTime'),
             color: 'from-sky-500 to-blue-500',
             bgColor: 'bg-sky-50',
         },
@@ -210,7 +225,7 @@ const StatsPage: React.FC = () => {
         <div className="animate-fade-in space-y-6">
             {/* Header */}
             <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold text-slate-800">Statistics</h1>
+                <h1 className="text-2xl font-bold text-slate-800">{t('stats.title')}</h1>
                 <div className="flex items-center gap-1 stats-year-selector rounded-xl p-1">
                     <button
                         onClick={() => setSelectedYear(y => y - 1)}
@@ -257,9 +272,9 @@ const StatsPage: React.FC = () => {
             {/* Heatmap Card */}
             <div className="glass-card rounded-2xl p-5 ring-1 ring-white/10">
                 <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-bold text-slate-800">Activity Heatmap</h3>
+                    <h3 className="font-bold text-slate-800">{t('stats.heatmap.title')}</h3>
                     <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                        <span>Less</span>
+                        <span>{t('stats.heatmap.less')}</span>
                         <div className="flex gap-0.5">
                             <div className="w-3 h-3 rounded-sm heatmap-0" />
                             <div className="w-3 h-3 rounded-sm heatmap-1" />
@@ -267,7 +282,7 @@ const StatsPage: React.FC = () => {
                             <div className="w-3 h-3 rounded-sm heatmap-3" />
                             <div className="w-3 h-3 rounded-sm heatmap-4" />
                         </div>
-                        <span>More</span>
+                        <span>{t('stats.heatmap.more')}</span>
                     </div>
                 </div>
 
@@ -314,7 +329,7 @@ const StatsPage: React.FC = () => {
                                         const dayStr = formatDateLocal(day.date);
                                         const isFuture = dayStr > todayStr;
                                         const tooltipText = isCurrentYear && !isFuture
-                                            ? `${dayStr}: ${day.value > 0 ? formatTime(day.value) : 'No focus'}`
+                                            ? `${dayStr}: ${day.value > 0 ? formatTime(day.value) : t('stats.heatmap.noFocus')}`
                                             : undefined;
 
                                         return (
@@ -338,7 +353,7 @@ const StatsPage: React.FC = () => {
 
             {/* Weekly Breakdown */}
             <div className="glass-card rounded-2xl p-5 ring-1 ring-white/10">
-                <h3 className="font-bold text-slate-800 mb-4">Weekly Overview</h3>
+                <h3 className="font-bold text-slate-800 mb-4">{t('stats.weeklyOverview')}</h3>
                 <div className="space-y-3">
                     {weekDays.map((day, index) => {
                         // Calculate average for this day of week
@@ -374,7 +389,7 @@ const StatsPage: React.FC = () => {
                         <Target size={24} className="text-white" />
                     </div>
                     <div>
-                        <p className="text-sm font-medium text-amber-700">Average Session</p>
+                        <p className="text-sm font-medium text-amber-700">{t('stats.averageSession')}</p>
                         <p className="text-2xl font-bold stat-number">{formatTime(averageSessionTime)}</p>
                     </div>
                 </div>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowLeft, Trophy } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useUserStore } from '../stores';
 import { getAchievements, markAchievementsSeen } from '../services/achievementService';
 import type { AchievementInfo } from '../types';
@@ -24,6 +25,7 @@ const AchievementsPage: React.FC<AchievementsPageProps> = ({
     totalSessions = 0,
     tasksCompleted = 0,
 }) => {
+    const { t } = useTranslation();
     const { user } = useUserStore();
     const [achievements, setAchievements] = useState<AchievementInfo[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -53,8 +55,6 @@ const AchievementsPage: React.FC<AchievementsPageProps> = ({
         const config = achievementDisplay[a.achievementType] || {
             icon: Trophy,
             color: 'from-slate-400 to-slate-500',
-            title: a.name,
-            description: a.description,
         };
 
         // Calculate progress for locked achievements
@@ -101,8 +101,8 @@ const AchievementsPage: React.FC<AchievementsPageProps> = ({
 
         return {
             id: a.achievementType,
-            title: config.title,
-            description: a.description,
+            title: t(`achievements.items.${a.achievementType}.title`, { defaultValue: a.name }),
+            description: t(`achievements.items.${a.achievementType}.description`, { defaultValue: a.description }),
             icon: config.icon,
             color: config.color,
             progress: a.unlocked ? target : progress,
@@ -117,7 +117,7 @@ const AchievementsPage: React.FC<AchievementsPageProps> = ({
     if (isLoading) {
         return (
             <div className="animate-fade-in flex items-center justify-center h-64">
-                <div className="animate-pulse text-slate-600">Loading achievements...</div>
+                <div className="animate-pulse text-slate-600">{t('achievements.loading')}</div>
             </div>
         );
     }
@@ -133,8 +133,8 @@ const AchievementsPage: React.FC<AchievementsPageProps> = ({
                     <ArrowLeft size={20} />
                 </button>
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-800">Achievements</h1>
-                    <p className="text-sm text-slate-500">{unlockedCount} of {displayAchievements.length} unlocked</p>
+                    <h1 className="text-2xl font-bold text-slate-800">{t('achievements.title')}</h1>
+                    <p className="text-sm text-slate-500">{t('achievements.unlockedCount', { unlocked: unlockedCount, total: displayAchievements.length })}</p>
                 </div>
             </div>
 
@@ -146,7 +146,7 @@ const AchievementsPage: React.FC<AchievementsPageProps> = ({
                     </div>
                     <div className="flex-1">
                         <p className="text-3xl font-bold text-slate-800">{unlockedCount}</p>
-                        <p className="text-sm text-slate-500">Achievements Earned</p>
+                        <p className="text-sm text-slate-500">{t('achievements.earned')}</p>
                         <div className="mt-2 h-2 bg-slate-200 rounded-full overflow-hidden">
                             <div
                                 className="h-full bg-gradient-to-r from-amber-400 to-yellow-500 rounded-full transition-all duration-500"
@@ -177,7 +177,7 @@ const AchievementsPage: React.FC<AchievementsPageProps> = ({
                                         <h3 className="font-bold text-slate-800">{achievement.title}</h3>
                                         {achievement.unlocked && (
                                             <span className="text-xs px-2 py-0.5 bg-emerald-100 text-emerald-600 font-semibold rounded-full">
-                                                Unlocked
+                                                {t('achievements.unlockedBadge')}
                                             </span>
                                         )}
                                     </div>
@@ -185,7 +185,7 @@ const AchievementsPage: React.FC<AchievementsPageProps> = ({
                                     {!achievement.unlocked && (
                                         <div className="mt-2">
                                             <div className="flex justify-between text-xs text-slate-400 mb-1">
-                                                <span>Progress</span>
+                                                <span>{t('achievements.progress')}</span>
                                                 <span>{achievement.progress} / {achievement.target}</span>
                                             </div>
                                             <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">

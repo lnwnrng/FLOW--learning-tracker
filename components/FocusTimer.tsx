@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Clock, CheckCircle2, RotateCcw, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useToast } from './ToastNotification';
 
 type OrbState = 'idle' | 'forming' | 'running' | 'dissolving';
@@ -24,6 +25,7 @@ const LongPressButton: React.FC<LongPressButtonProps> = ({
     title,
     variant
 }) => {
+    const { t } = useTranslation();
     const [progress, setProgress] = useState(0);
     const [isHolding, setIsHolding] = useState(false);
     const intervalRef = useRef<number | null>(null);
@@ -170,7 +172,7 @@ const LongPressButton: React.FC<LongPressButtonProps> = ({
                     border: colors.border,
                     boxShadow: isHolding ? colors.holdShadow : colors.shadow,
                 }}
-                title={`Hold to ${title}`}
+                title={t('timer.holdTo', { action: title })}
             >
                 {/* Icon */}
                 <div className={`relative z-10 transition-transform duration-500 ${isHolding ? '' : 'group-hover:rotate-180'}`}>
@@ -195,6 +197,7 @@ const SessionEndModal: React.FC<SessionEndModalProps> = ({
     onConfirm,
     onCancel,
 }) => {
+    const { t } = useTranslation();
     const isValidSession = elapsedTime >= 60; // 1 minute minimum
 
     const formatTime = (seconds: number) => {
@@ -203,12 +206,12 @@ const SessionEndModal: React.FC<SessionEndModalProps> = ({
         const secs = seconds % 60;
 
         if (hrs > 0) {
-            return `${hrs}h ${mins}m ${secs}s`;
+            return `${hrs}${t('time.hour')} ${mins}${t('time.minute')} ${secs}${t('time.second')}`;
         }
         if (mins > 0) {
-            return `${mins}m ${secs}s`;
+            return `${mins}${t('time.minute')} ${secs}${t('time.second')}`;
         }
-        return `${secs}s`;
+        return `${secs}${t('time.second')}`;
     };
 
     if (!isOpen) return null;
@@ -261,14 +264,14 @@ const SessionEndModal: React.FC<SessionEndModalProps> = ({
 
                 {/* Title */}
                 <h3 className="text-xl font-bold text-center text-slate-800 mb-2">
-                    {isValidSession ? 'End Session?' : 'Session Too Short'}
+                    {isValidSession ? t('timer.endModal.titleEnd') : t('timer.endModal.titleTooShort')}
                 </h3>
 
                 {/* Description */}
                 <p className="text-center text-slate-500 text-sm mb-4">
                     {isValidSession
-                        ? 'Great focus! This session will be saved to your records.'
-                        : 'Sessions under 1 minute won\'t be recorded. Keep going!'}
+                        ? t('timer.endModal.descEnd')
+                        : t('timer.endModal.descTooShort')}
                 </p>
 
                 {/* Time display */}
@@ -280,14 +283,14 @@ const SessionEndModal: React.FC<SessionEndModalProps> = ({
                     }}
                 >
                     <p className="text-center text-xs text-slate-400 uppercase tracking-wider mb-1">
-                        Session Duration
+                        {t('timer.endModal.duration')}
                     </p>
                     <p className={`text-center text-3xl font-bold ${isValidSession ? 'text-emerald-600' : 'text-amber-600'}`}>
                         {formatTime(elapsedTime)}
                     </p>
                     {!isValidSession && (
                         <p className="text-center text-xs text-slate-400 mt-2">
-                            Need {formatTime(60 - elapsedTime)} more for valid session
+                            {t('timer.endModal.needMore', { remaining: formatTime(60 - elapsedTime) })}
                         </p>
                     )}
                 </div>
@@ -303,7 +306,7 @@ const SessionEndModal: React.FC<SessionEndModalProps> = ({
                             color: '#64748b',
                         }}
                     >
-                        {isValidSession ? 'Continue' : 'Keep Going'}
+                        {isValidSession ? t('timer.endModal.continue') : t('timer.endModal.keepGoing')}
                     </button>
                     <button
                         onClick={onConfirm}
@@ -317,7 +320,7 @@ const SessionEndModal: React.FC<SessionEndModalProps> = ({
                                 : '0 4px 16px -4px rgba(245, 158, 11, 0.4)',
                         }}
                     >
-                        {isValidSession ? 'End & Save' : 'Discard'}
+                        {isValidSession ? t('timer.endModal.endAndSave') : t('timer.endModal.discard')}
                     </button>
                 </div>
             </div>
@@ -348,6 +351,7 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
     onReset,
     onComplete,
 }) => {
+    const { t } = useTranslation();
     const [showEndModal, setShowEndModal] = useState(false);
     const { showToast } = useToast();
 
@@ -369,9 +373,9 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
         const hrs = Math.floor(seconds / 3600);
         const mins = Math.floor((seconds % 3600) / 60);
         if (hrs > 0) {
-            return `${hrs}h ${mins}m`;
+            return `${hrs}${t('time.hour')} ${mins}${t('time.minute')}`;
         }
-        return `${mins}m`;
+        return `${mins}${t('time.minute')}`;
     };
 
     const handleOrbClick = () => {
@@ -418,14 +422,14 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
                             <Clock size={22} className="text-sky-500" />
                         </div>
                         <div>
-                            <p className="text-sm text-sky-600/80 font-medium">Today's Flow</p>
+                            <p className="text-sm text-sky-600/80 font-medium">{t('timer.todaysFlow')}</p>
                             <p className="text-2xl font-bold bg-gradient-to-r from-sky-600 to-violet-600 bg-clip-text text-transparent">
                                 {formatMinutes(todayFocusTime + elapsedTime)}
                             </p>
                         </div>
                     </div>
                     <div className="text-right">
-                        <p className="text-xs text-slate-500 mb-1">Sessions</p>
+                        <p className="text-xs text-slate-500 mb-1">{t('timer.sessions')}</p>
                         <div className="flex items-center gap-1.5 justify-end">
                             <div className="w-3 h-3 rounded-full bg-gradient-to-br from-amber-400 to-orange-500" />
                             <span className="text-lg font-bold text-slate-700">{todaySessionCount}</span>
@@ -544,10 +548,10 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
                                 />
                             )}
                             <span className="text-sm font-medium orb-status-text">
-                                {orbState === 'forming' ? 'Starting...' :
-                                    orbState === 'running' ? 'In Flow' :
-                                        orbState === 'dissolving' ? 'Pausing...' :
-                                            elapsedTime > 0 ? 'Paused' : 'Tap to Start'}
+                                {orbState === 'forming' ? t('timer.status.starting') :
+                                    orbState === 'running' ? t('timer.status.inFlow') :
+                                        orbState === 'dissolving' ? t('timer.status.pausing') :
+                                            elapsedTime > 0 ? t('timer.status.paused') : t('timer.status.tapToStart')}
                             </span>
                         </div>
                     </button>
@@ -566,7 +570,7 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
                             size={56}
                             duration={1200}
                             variant="danger"
-                            title="End Session"
+                            title={t('timer.endModal.endSession')}
                             icon={
                                 <X
                                     size={24}
@@ -581,14 +585,14 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
                 {/* Hint Text */}
                 <p className="text-center text-sm text-slate-400 mt-4 font-medium">
                     {orbState === 'running'
-                        ? "Tap the droplet to pause"
+                        ? t('timer.hint.tapToPause')
                         : orbState === 'forming'
-                            ? "Forming..."
+                            ? t('timer.hint.forming')
                             : orbState === 'dissolving'
-                                ? "Settling..."
+                                ? t('timer.hint.settling')
                                 : elapsedTime > 0
-                                    ? "Tap to continue, or end your session"
-                                    : "Tap the orb to begin your focus session"
+                                    ? t('timer.hint.tapToContinueOrEnd')
+                                    : t('timer.hint.tapToBegin')
                     }
                 </p>
             </div>
@@ -608,14 +612,14 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
                         const secs = elapsedTime % 60;
                         showToast({
                             type: 'success',
-                            title: 'Session Saved',
-                            message: `Great focus! ${mins}m ${secs}s recorded.`,
+                            title: t('timer.toast.savedTitle'),
+                            message: t('timer.toast.savedMessage', { mins, secs }),
                         });
                     } else {
                         showToast({
                             type: 'info',
-                            title: 'Session Discarded',
-                            message: 'Sessions under 1 minute are not recorded.',
+                            title: t('timer.toast.discardedTitle'),
+                            message: t('timer.toast.discardedMessage'),
                         });
                     }
                 }}
