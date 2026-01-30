@@ -97,9 +97,9 @@ FLOW/
 
 ## 数据存储位置
 
-- **Windows**：`C:\Users\<用户名>\AppData\Roaming\com.tauri.dev\flow.db`
-- **macOS**：`~/Library/Application Support/com.tauri.dev/flow.db`
-- **Linux**：`~/.local/share/com.tauri.dev/flow.db`
+- **Windows**：`C:\Users\<用户名>\AppData\Roaming\io.github.lnwnrng.flow\flow.db`
+- **macOS**：`~/Library/Application Support/io.github.lnwnrng.flow/flow.db`
+- **Linux**：`~/.local/share/io.github.lnwnrng.flow/flow.db`
 
 ## License
 
