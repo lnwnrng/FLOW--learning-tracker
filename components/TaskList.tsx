@@ -8,6 +8,8 @@ import { triggerFeedback } from '../services/feedbackService';
 interface TaskListProps {
   tasks?: Task[];
   onAddTask?: () => void;
+  onAddTaskDisabled?: () => void;
+  canAddTask?: boolean;
   onToggleTask?: (taskId: string) => void;
 }
 
@@ -39,6 +41,8 @@ const categoryColors = {
 const TaskList: React.FC<TaskListProps> = ({
   tasks = [],
   onAddTask,
+  onAddTaskDisabled,
+  canAddTask = true,
   onToggleTask
 }) => {
   const { t, i18n } = useTranslation();
@@ -97,12 +101,59 @@ const TaskList: React.FC<TaskListProps> = ({
         </button>
         <button
           onClick={() => {
+            if (!canAddTask) {
+              onAddTaskDisabled?.();
+              return;
+            }
             triggerFeedback('tap');
             onAddTask?.();
           }}
-          className="bg-violet-500 text-white p-3 rounded-full shadow-lg shadow-violet-500/25 hover:bg-violet-600 hover:shadow-xl hover:shadow-violet-500/30 transition-all transform active:scale-95"
+          title={canAddTask ? t('tasks.addTask') : t('tasks.toast.pastDateMessage')}
+          aria-label={t('tasks.addTask')}
+          aria-disabled={!canAddTask}
+          className={`
+            relative overflow-hidden
+            w-11 h-11 flex items-center justify-center rounded-2xl
+            transition-all duration-300 ease-out
+            ${canAddTask
+              ? `
+                group
+                bg-gradient-to-br from-violet-500 via-sky-500 to-cyan-400
+                ring-1 ring-white/20
+                shadow-lg shadow-violet-500/25
+                hover:shadow-xl hover:shadow-sky-500/25 hover:scale-[1.03]
+                active:scale-95
+              `
+              : `
+                bg-white/60 ring-1 ring-white/10 shadow-sm
+                cursor-not-allowed
+              `
+            }
+          `}
         >
-          <Plus size={20} />
+          {canAddTask && (
+            <>
+              <span
+                aria-hidden="true"
+                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                style={{
+                  background: 'radial-gradient(circle at 25% 20%, rgba(255, 255, 255, 0.55), transparent 55%)',
+                }}
+              />
+              <span
+                aria-hidden="true"
+                className="absolute -inset-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                style={{
+                  background: 'radial-gradient(circle at 70% 80%, rgba(56, 189, 248, 0.35), transparent 60%)',
+                }}
+              />
+            </>
+          )}
+          <Plus
+            size={20}
+            className={`relative drop-shadow-sm transition-transform duration-300 ${canAddTask ? 'text-white group-hover:rotate-90' : 'text-slate-400'
+              }`}
+          />
         </button>
       </div>
 

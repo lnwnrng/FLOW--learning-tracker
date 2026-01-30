@@ -38,6 +38,13 @@ const formatLocalDate = (date: Date) => {
   return `${year}-${month}-${day}`;
 };
 
+const isPastDay = (date: Date) => {
+  const today = new Date();
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const dateStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  return dateStart < todayStart;
+};
+
 // Onboarding component for new users
 const OnboardingScreen: React.FC<{
   onCreateUser: (name: string) => void;
@@ -182,6 +189,7 @@ const OnboardingScreen: React.FC<{
 
 const App: React.FC = () => {
   const { t } = useTranslation();
+  const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<Tab>(Tab.HOME);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
@@ -647,7 +655,15 @@ const App: React.FC = () => {
                 endTime: t.endTime,
                 completed: t.completed,
               }))}
+              canAddTask={!isPastDay(selectedDate)}
               onAddTask={() => setIsAddTaskOpen(true)}
+              onAddTaskDisabled={() => {
+                showToast({
+                  type: 'warning',
+                  title: t('tasks.toast.pastDateTitle'),
+                  message: t('tasks.toast.pastDateMessage'),
+                });
+              }}
               onToggleTask={handleToggleTask}
             />
           </div>

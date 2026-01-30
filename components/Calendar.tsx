@@ -160,6 +160,7 @@ const Calendar: React.FC<CalendarProps> = ({
         {calendarDays.map((day, index) => {
           const event = getEventForDate(day.fullDate);
           const selected = isSelected(day.fullDate);
+          const todayMarker = isToday(day.fullDate);
 
           return (
             <div key={index} className="flex flex-col items-center justify-center py-1.5">
@@ -169,15 +170,27 @@ const Calendar: React.FC<CalendarProps> = ({
                   triggerFeedback('tap');
                   onSelectDate?.(day.fullDate);
                 }}
+                aria-current={todayMarker ? 'date' : undefined}
                 className={`
                   w-9 h-9 flex items-center justify-center rounded-xl text-sm font-medium
                   transition-all duration-200
-                  ${!day.isCurrentMonth ? 'text-slate-300' : 'text-slate-600'}
+                  ${!day.isCurrentMonth
+                    ? 'text-slate-300'
+                    : todayMarker && !selected
+                      ? 'text-slate-700'
+                      : 'text-slate-600'
+                  }
                   ${selected
                     ? 'bg-gradient-to-br from-violet-500 to-sky-500 text-white shadow-md shadow-violet-300/50'
-                    : day.isCurrentMonth
-                      ? 'hover:bg-white/80 hover:shadow-sm'
-                      : ''
+                    : todayMarker
+                      ? `
+                        ring-2 ring-violet-400/45
+                        bg-white/70 shadow-sm shadow-violet-300/25
+                        hover:bg-white/80 hover:shadow-md
+                      `
+                      : day.isCurrentMonth
+                        ? 'hover:bg-white/80 hover:shadow-sm'
+                        : ''
                   }
                 `}
               >
@@ -185,7 +198,10 @@ const Calendar: React.FC<CalendarProps> = ({
               </button>
 
               {/* Event Dot */}
-              <div className="h-1.5 mt-0.5">
+              <div className="h-1.5 mt-0.5 flex items-center justify-center gap-1">
+                {todayMarker && !selected && (
+                  <span className="block w-1.5 h-1.5 rounded-full bg-gradient-to-r from-violet-500 to-sky-500 shadow-sm shadow-violet-300/40"></span>
+                )}
                 {event && !selected && (
                   <span className={`block w-1 h-1 rounded-full ${event.color}`}></span>
                 )}

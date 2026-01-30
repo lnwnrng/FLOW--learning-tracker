@@ -59,6 +59,19 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
     const selectedCategoryInfo = categories.find(c => c.id === category);
 
     const handleSave = () => {
+        const today = new Date();
+        const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const dateStart = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+
+        if (dateStart < todayStart) {
+            showToast({
+                type: 'warning',
+                title: t('tasks.toast.pastDateTitle'),
+                message: t('tasks.toast.pastDateMessage'),
+            });
+            return;
+        }
+
         if (!title.trim()) return;
 
         // Use local date components to avoid timezone issues with toISOString()

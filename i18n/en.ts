@@ -83,6 +83,8 @@ const en = {
     toast: {
       createdTitle: 'Task Created',
       addedToSchedule: '"{{title}}" added to your schedule.',
+      pastDateTitle: 'Cannot add to past date',
+      pastDateMessage: 'Past dates are read-only. Please choose today or a future date.',
     },
   },
   timer: {

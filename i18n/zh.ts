@@ -83,6 +83,8 @@ const zh = {
     toast: {
       createdTitle: '任务已创建',
       addedToSchedule: '已将“{{title}}”添加到日程。',
+      pastDateTitle: '无法创建日程',
+      pastDateMessage: '不能在已过去的日期创建日程，请选择今天或未来的日期。',
     },
   },
   timer: {
