@@ -914,6 +914,135 @@
       transform: translateY(-50%);
     }
 
+    /* ===== Theme Mode Switch (Simple) ===== */
+    .theme-mode-switch {
+      --switch-width: 56px;
+      --switch-height: 32px;
+      --switch-padding: 2px;
+      --knob-size: calc(var(--switch-height) - (var(--switch-padding) * 2));
+      --icon-size: 18px;
+      --day-bg: #73c0fc;
+      --night-bg: #183153;
+      --knob-bg: #e8e8e8;
+      position: relative;
+      display: inline-block;
+      width: var(--switch-width);
+      height: var(--switch-height);
+      flex-shrink: 0;
+    }
+
+    .theme-mode-switch * {
+      box-sizing: border-box;
+    }
+
+    .theme-mode-switch__input {
+      position: absolute;
+      inset: 0;
+      margin: 0;
+      opacity: 0;
+      cursor: pointer;
+      z-index: 3;
+    }
+
+    .theme-mode-switch__slider {
+      position: absolute;
+      inset: 0;
+      border-radius: 9999px;
+      background-color: var(--day-bg);
+      transition: background-color 0.35s ease;
+      box-shadow:
+        inset 0 1px 2px rgba(255, 255, 255, 0.35),
+        inset 0 -1px 2px rgba(15, 23, 42, 0.12);
+    }
+
+    .theme-mode-switch__slider::before {
+      content: "";
+      position: absolute;
+      height: var(--knob-size);
+      width: var(--knob-size);
+      left: var(--switch-padding);
+      top: var(--switch-padding);
+      border-radius: 9999px;
+      background-color: var(--knob-bg);
+      transition: transform 0.35s ease;
+      box-shadow: 0 6px 14px rgba(15, 23, 42, 0.18);
+      z-index: 2;
+    }
+
+    .theme-mode-switch__sun svg,
+    .theme-mode-switch__moon svg {
+      position: absolute;
+      top: 50%;
+      width: var(--icon-size);
+      height: var(--icon-size);
+      transform: translateY(-50%);
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .theme-mode-switch__sun svg {
+      right: 6px;
+      animation: theme-mode-switch-rotate 14s linear infinite;
+    }
+
+    .theme-mode-switch__moon svg {
+      left: 6px;
+      fill: var(--day-bg);
+      animation: theme-mode-switch-tilt 6s linear infinite;
+    }
+
+    @keyframes theme-mode-switch-rotate {
+      from {
+        transform: translateY(-50%) rotate(0deg);
+      }
+
+      to {
+        transform: translateY(-50%) rotate(360deg);
+      }
+    }
+
+    @keyframes theme-mode-switch-tilt {
+      0% {
+        transform: translateY(-50%) rotate(0deg);
+      }
+
+      25% {
+        transform: translateY(-50%) rotate(-10deg);
+      }
+
+      75% {
+        transform: translateY(-50%) rotate(10deg);
+      }
+
+      100% {
+        transform: translateY(-50%) rotate(0deg);
+      }
+    }
+
+    .theme-mode-switch__input:checked + .theme-mode-switch__slider {
+      background-color: var(--night-bg);
+    }
+
+    .theme-mode-switch__input:checked + .theme-mode-switch__slider::before {
+      transform: translateX(calc(var(--switch-width) - var(--knob-size) - (var(--switch-padding) * 2)));
+    }
+
+    .theme-mode-switch__input:focus-visible + .theme-mode-switch__slider {
+      outline: 2px solid rgba(99, 102, 241, 0.55);
+      outline-offset: 2px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+
+      .theme-mode-switch__sun svg,
+      .theme-mode-switch__moon svg,
+      .theme-mode-switch__slider,
+      .theme-mode-switch__slider::before {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+
     .orb-status-chip {
       position: relative;
       background: var(--status-idle-bg);
