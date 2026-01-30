@@ -14,8 +14,11 @@
       {
         "label": "main",
         "title": "FLOW - Learning Tracker",
-        "width": 800,
-        "height": 600,
+        "width": 460,
+        "height": 680,
+        "decorations": false,
+        "transparent": true,
+        "shadow": false,
         "resizable": true,
         "visible": false,
         "fullscreen": false

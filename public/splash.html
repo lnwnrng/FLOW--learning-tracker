@@ -193,12 +193,12 @@
         </svg>
       </div>
       <h1>FLOW</h1>
-      <p>Preparing your focus space</p>
+      <p data-i18n="splash.tagline">Preparing your focus space</p>
       <div class="progress-track">
         <div class="progress-bar"></div>
       </div>
       <div class="loading">
-        <span>Loading</span>
+        <span data-i18n="splash.loading">Loading</span>
         <span class="dots">
           <span class="dot"></span>
           <span class="dot"></span>
@@ -206,5 +206,38 @@
         </span>
       </div>
     </div>
+    <script>
+      (function () {
+        var STORAGE_KEY = 'flow.language';
+        var translations = {
+          en: {
+            'splash.tagline': 'Preparing your focus space',
+            'splash.loading': 'Loading',
+          },
+          zh: {
+            'splash.tagline': '正在准备你的专注空间',
+            'splash.loading': '加载中',
+          },
+        };
+
+        var stored = 'en';
+        try {
+          stored = localStorage.getItem(STORAGE_KEY) || 'en';
+        } catch (e) {
+          stored = 'en';
+        }
+
+        var lang = stored.toLowerCase().split('-')[0];
+        var dict = translations[lang] || translations.en;
+        document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en-US';
+
+        Object.keys(dict).forEach(function (key) {
+          var el = document.querySelector('[data-i18n=\"' + key + '\"]');
+          if (el) {
+            el.textContent = dict[key];
+          }
+        });
+      })();
+    </script>
   </body>
 </html>

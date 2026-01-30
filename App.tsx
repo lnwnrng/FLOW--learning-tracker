@@ -13,6 +13,7 @@ import HomePage from './components/HomePage';
 import AchievementsPage from './components/AchievementsPage';
 import PremiumPage from './components/PremiumPage';
 import SettingsPage from './components/SettingsPage';
+import TitleBar from './components/TitleBar';
 import { ToastProvider, useToast } from './components/ToastNotification';
 import PremiumSuccessModal from './components/PremiumSuccessModal';
 import AchievementUnlockedModal from './components/AchievementUnlockedModal';
@@ -20,7 +21,7 @@ import { Tab, Task, TaskCategory, AchievementType, User } from './types';
 import { useUserStore, useSessionStore, useTaskStore, useSettingsStore } from './stores';
 import { checkAndUnlockAchievements, getUnseenAchievementsCount } from './services/achievementService';
 import { getUsers, setCurrentUser } from './services/userService';
-import i18n, { normalizeLanguage, languageToLocale } from './i18n';
+import i18n, { getStoredLanguage, languageToLocale, normalizeLanguage, setStoredLanguage } from './i18n';
 import { triggerFeedback } from './services/feedbackService';
 
 // Category to color mapping for calendar dots
@@ -61,7 +62,7 @@ const OnboardingScreen: React.FC<{
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center onboarding-surface p-6">
+    <div className="min-h-full flex items-center justify-center onboarding-surface p-6">
       <div className="w-full max-w-md">
         <div className="backdrop-blur-xl bg-white/70 rounded-3xl p-8 shadow-xl border border-white/50">
           <div className="text-center mb-8">
@@ -260,11 +261,15 @@ const App: React.FC = () => {
   }, [themeMode]);
 
   useEffect(() => {
-    const nextLanguage = user ? normalizeLanguage(languageSetting) : 'en';
+    const storedLanguage = getStoredLanguage();
+    const nextLanguage = user
+      ? normalizeLanguage(languageSetting ?? storedLanguage)
+      : storedLanguage;
     if (i18n.language !== nextLanguage) {
       i18n.changeLanguage(nextLanguage).catch(() => undefined);
     }
     document.documentElement.lang = languageToLocale(nextLanguage);
+    setStoredLanguage(nextLanguage);
   }, [languageSetting, user]);
 
   useEffect(() => {
@@ -484,11 +489,21 @@ const App: React.FC = () => {
     }
   };
 
+  const frameBackground = themeMode === 'dark' ? '#0b1120' : '#F8FAFC';
+
   // Show loading state during initialization
   if (!isInitialized) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-violet-50 to-sky-50">
-        <div className="animate-pulse text-xl text-slate-600">{t('common.loading')}</div>
+      <div
+        className="flow-window h-screen text-slate-900 selection:bg-violet-500 selection:text-white relative transition-all duration-700"
+        style={{ background: frameBackground }}
+      >
+        <TitleBar />
+        <div className="flow-titlebar-offset">
+          <div className="min-h-full flex items-center justify-center bg-gradient-to-br from-slate-50 via-violet-50 to-sky-50">
+            <div className="animate-pulse text-xl text-slate-600">{t('common.loading')}</div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -496,12 +511,20 @@ const App: React.FC = () => {
   // Show onboarding if no user exists
   if (!user) {
     return (
-      <OnboardingScreen
-        onCreateUser={handleCreateUser}
-        onSelectUser={handleSelectUser}
-        isLoading={userLoading}
-        existingUsers={existingUsers}
-      />
+      <div
+        className="flow-window h-screen text-slate-900 selection:bg-violet-500 selection:text-white relative transition-all duration-700"
+        style={{ background: frameBackground }}
+      >
+        <TitleBar />
+        <div className="flow-titlebar-offset">
+          <OnboardingScreen
+            onCreateUser={handleCreateUser}
+            onSelectUser={handleSelectUser}
+            isLoading={userLoading}
+            existingUsers={existingUsers}
+          />
+        </div>
+      </div>
     );
   }
 
@@ -669,17 +692,19 @@ const App: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen text-slate-900 selection:bg-violet-500 selection:text-white relative transition-all duration-700"
+      className="flow-window h-screen text-slate-900 selection:bg-violet-500 selection:text-white relative transition-all duration-700"
       style={{ background: getBackground() }}
     >
-
-      <main className="
-        container mx-auto px-5 py-6 pb-32 
-        md:pl-32 md:pr-8 md:py-10 md:pb-10
-        max-w-md md:max-w-xl
-      ">
-        {renderContent()}
-      </main>
+      <TitleBar />
+      <div className="flow-titlebar-offset">
+        <main className="
+          container mx-auto px-5 pt-0 pb-32 
+          md:pl-32 md:pr-8 md:pt-0 md:pb-10
+          max-w-md md:max-w-xl
+        ">
+          {renderContent()}
+        </main>
+      </div>
 
       {/* Navigation Dock */}
       <Dock activeTab={activeTab} setActiveTab={setActiveTab} isTimerRunning={isTimerRunning} />

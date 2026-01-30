@@ -14,6 +14,18 @@ const zh = {
     minute: '分',
     second: '秒',
   },
+  splash: {
+    tagline: '正在准备你的专注空间',
+    loading: '加载中',
+  },
+  titlebar: {
+    appName: 'Flow',
+    subtitle: '学习追踪',
+    pin: '钉在桌面',
+    unpin: '取消钉在桌面',
+    minimize: '最小化',
+    close: '关闭',
+  },
   onboarding: {
     title: '欢迎使用 Flow',
     subtitle: '你的个人专注伙伴',

@@ -14,6 +14,18 @@ const en = {
     minute: 'm',
     second: 's',
   },
+  splash: {
+    tagline: 'Preparing your focus space',
+    loading: 'Loading',
+  },
+  titlebar: {
+    appName: 'Flow',
+    subtitle: 'Learning Tracker',
+    pin: 'Pin to Desktop',
+    unpin: 'Unpin from Desktop',
+    minimize: 'Minimize',
+    close: 'Close',
+  },
   onboarding: {
     title: 'Welcome to Flow',
     subtitle: 'Your personal focus companion',

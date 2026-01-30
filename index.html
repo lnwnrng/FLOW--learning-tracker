@@ -14,9 +14,17 @@
       font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
+    html,
+    body,
+    #root {
+      height: 100%;
+    }
+
     body {
-      background-color: var(--surface-1);
+      margin: 0;
+      background-color: transparent;
       color: var(--text-slate-900);
+      overflow: hidden;
     }
 
     :root {
@@ -181,6 +189,29 @@
       --signout-bg: rgba(248, 250, 252, 0.8);
       --signout-border: rgba(226, 232, 240, 0.7);
       --signout-text: #6366f1;
+
+      --window-radius: 22px;
+      --frame-border: rgba(148, 163, 184, 0.35);
+      --frame-border-inner: rgba(255, 255, 255, 0.6);
+      --frame-shadow: none;
+
+      --titlebar-height: 48px;
+      --titlebar-surface: linear-gradient(135deg, rgba(255, 255, 255, 0.82) 0%, rgba(226, 232, 240, 0.7) 100%);
+      --titlebar-border: rgba(226, 232, 240, 0.9);
+      --titlebar-text: #0f172a;
+      --titlebar-subtext: #64748b;
+      --titlebar-badge-bg: rgba(255, 255, 255, 0.9);
+      --titlebar-badge-border: rgba(226, 232, 240, 0.9);
+      --titlebar-button-bg: rgba(255, 255, 255, 0.65);
+      --titlebar-button-border: rgba(226, 232, 240, 0.8);
+      --titlebar-button-hover: rgba(255, 255, 255, 0.95);
+      --titlebar-button-active: rgba(226, 232, 240, 0.8);
+      --titlebar-pin-bg: linear-gradient(135deg, rgba(99, 102, 241, 0.22), rgba(56, 189, 248, 0.2));
+      --titlebar-pin-border: rgba(99, 102, 241, 0.45);
+      --titlebar-pin-text: #4338ca;
+      --titlebar-close-hover: rgba(239, 68, 68, 0.95);
+      --titlebar-close-border: rgba(248, 113, 113, 0.9);
+      --titlebar-close-text: #ffffff;
     }
 
     html[data-theme="dark"] {
@@ -347,6 +378,29 @@
       --signout-bg: rgba(15, 23, 42, 0.8);
       --signout-border: rgba(148, 163, 184, 0.18);
       --signout-text: #c7d2fe;
+
+      --window-radius: 22px;
+      --frame-border: rgba(148, 163, 184, 0.22);
+      --frame-border-inner: rgba(148, 163, 184, 0.12);
+      --frame-shadow: none;
+
+      --titlebar-height: 48px;
+      --titlebar-surface: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.78) 100%);
+      --titlebar-border: rgba(148, 163, 184, 0.2);
+      --titlebar-text: #e2e8f0;
+      --titlebar-subtext: #94a3b8;
+      --titlebar-badge-bg: rgba(15, 23, 42, 0.85);
+      --titlebar-badge-border: rgba(148, 163, 184, 0.2);
+      --titlebar-button-bg: rgba(15, 23, 42, 0.7);
+      --titlebar-button-border: rgba(148, 163, 184, 0.22);
+      --titlebar-button-hover: rgba(30, 41, 59, 0.9);
+      --titlebar-button-active: rgba(51, 65, 85, 0.9);
+      --titlebar-pin-bg: linear-gradient(135deg, rgba(56, 189, 248, 0.28), rgba(99, 102, 241, 0.26));
+      --titlebar-pin-border: rgba(99, 102, 241, 0.5);
+      --titlebar-pin-text: #e0e7ff;
+      --titlebar-close-hover: rgba(239, 68, 68, 0.85);
+      --titlebar-close-border: rgba(248, 113, 113, 0.7);
+      --titlebar-close-text: #ffffff;
     }
 
     .text-slate-900 {
@@ -1883,6 +1937,119 @@
     .checkmark-draw {
       stroke-dasharray: 20;
       animation: checkmarkDraw 0.4s ease-out forwards;
+    }
+
+    /* ===== Custom Window Frame + Titlebar ===== */
+    .flow-window {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      border-radius: var(--window-radius);
+      border: 1px solid var(--frame-border);
+      box-shadow: var(--frame-shadow);
+      overflow: hidden;
+    }
+
+
+    .flow-titlebar {
+      position: sticky;
+      top: 0;
+      z-index: 60;
+      height: var(--titlebar-height);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      background: var(--titlebar-surface);
+      border-bottom: 1px solid var(--titlebar-border);
+      backdrop-filter: blur(18px) saturate(150%);
+      -webkit-backdrop-filter: blur(18px) saturate(150%);
+      user-select: none;
+    }
+
+    .flow-titlebar-offset {
+      padding-top: var(--titlebar-height);
+      height: calc(100vh - var(--titlebar-height));
+      min-height: calc(100vh - var(--titlebar-height));
+      overflow: auto;
+    }
+
+    .flow-titlebar-offset {
+      scrollbar-width: none;
+      scrollbar-color: transparent transparent;
+    }
+
+    .flow-titlebar-offset::-webkit-scrollbar {
+      width: 0;
+      height: 0;
+    }
+
+    .flow-titlebar-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--titlebar-text);
+      font-weight: 600;
+      z-index: 2;
+    }
+
+    .flow-titlebar-badge {
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--titlebar-badge-bg);
+      border: 1px solid var(--titlebar-badge-border);
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--titlebar-text);
+    }
+
+    .flow-titlebar-title {
+      font-size: 13px;
+      color: var(--titlebar-subtext);
+      font-weight: 600;
+    }
+
+    .flow-titlebar-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 2;
+    }
+
+    .flow-titlebar-button {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      border: 1px solid var(--titlebar-button-border);
+      background: var(--titlebar-button-bg);
+      color: var(--titlebar-text);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+    }
+
+    .flow-titlebar-button:hover {
+      background: var(--titlebar-button-hover);
+    }
+
+    .flow-titlebar-button:active {
+      transform: scale(0.95);
+      background: var(--titlebar-button-active);
+    }
+
+    .flow-titlebar-button[data-active="true"] {
+      background: var(--titlebar-pin-bg);
+      border-color: var(--titlebar-pin-border);
+      color: var(--titlebar-pin-text);
+      box-shadow: 0 10px 18px -14px rgba(99, 102, 241, 0.6);
+    }
+
+    .flow-titlebar-button[data-variant="close"]:hover {
+      background: var(--titlebar-close-hover);
+      border-color: var(--titlebar-close-border);
+      color: var(--titlebar-close-text);
     }
   </style>
   <script>
