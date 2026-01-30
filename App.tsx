@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { Crown } from 'lucide-react';
 import { invoke } from '@tauri-apps/api/core';
 import { useTranslation } from 'react-i18next';
@@ -214,6 +214,7 @@ const App: React.FC = () => {
   const timerIntervalRef = useRef<number | null>(null);
   const timerStartTimeRef = useRef<number | null>(null);
   const sessionStartRef = useRef<Date | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
   const isTimerRunning = timerOrbState === 'running';
   const themeMode = settings['themeMode'] === 'dark' ? 'dark' : 'light';
@@ -253,6 +254,11 @@ const App: React.FC = () => {
       fetchSettings();
     }
   }, [user, fetchSettings]);
+
+  useLayoutEffect(() => {
+    if (!subPage) return;
+    scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'auto' });
+  }, [subPage]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -696,15 +702,15 @@ const App: React.FC = () => {
       style={{ background: getBackground() }}
     >
       <TitleBar />
-      <div className="flow-titlebar-offset">
+      <div className="flow-titlebar-offset" ref={scrollContainerRef}>
         <main className="
-          container mx-auto px-5 pt-0 pb-32 
-          md:pl-32 md:pr-8 md:pt-0 md:pb-10
+          container mx-auto px-5 pt-4 pb-32 
+          md:pl-32 md:pr-8 md:pt-4 md:pb-10
           max-w-md md:max-w-xl
         ">
           {renderContent()}
-        </main>
-      </div>
+          </main>
+        </div>
 
       {/* Navigation Dock */}
       <Dock activeTab={activeTab} setActiveTab={setActiveTab} isTimerRunning={isTimerRunning} />
