@@ -4,6 +4,7 @@ import { Task } from '../types';
 import { useTranslation } from 'react-i18next';
 import { triggerFeedback } from '../services/feedbackService';
 import { useToast } from './ToastNotification';
+import FlowPortal from './FlowPortal';
 
 interface AddTaskModalProps {
     isOpen: boolean;
@@ -92,23 +93,27 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center">
-            {/* Backdrop */}
+        <FlowPortal>
             <div
-                className="absolute inset-0 flow-backdrop"
-                onClick={() => {
-                    triggerFeedback('tap');
-                    onClose();
-                }}
-            />
+                className="absolute left-0 right-0 bottom-0 z-[100] flex items-end md:items-center justify-center"
+                style={{ top: 'var(--titlebar-height)' }}
+            >
+                {/* Backdrop */}
+                <div
+                    className="absolute inset-0 flow-backdrop"
+                    onClick={() => {
+                        triggerFeedback('tap');
+                        onClose();
+                    }}
+                />
 
-            {/* Modal */}
-            <div className="
-        relative w-full md:w-[400px] 
-        flow-sheet rounded-t-[2rem] md:rounded-[2rem]
-        max-h-[90vh] overflow-y-auto
-        animate-fade-in
-      ">
+                {/* Modal */}
+                <div className="
+            relative w-full md:w-[400px] 
+            flow-sheet rounded-t-[2rem] md:rounded-[2rem]
+            max-h-[90vh] overflow-y-auto
+            animate-fade-in
+          ">
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 pb-4">
                     <h2 className="text-xl font-bold text-slate-800">{t('tasks.newTask')}</h2>
@@ -254,8 +259,9 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                         {t('tasks.addTask')}
                     </button>
                 </div>
+                </div>
             </div>
-        </div>
+        </FlowPortal>
     );
 };
 

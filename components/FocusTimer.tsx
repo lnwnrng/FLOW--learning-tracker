@@ -3,6 +3,7 @@ import { Clock, CheckCircle2, RotateCcw, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { triggerFeedback } from '../services/feedbackService';
 import { useToast } from './ToastNotification';
+import FlowPortal from './FlowPortal';
 
 type OrbState = 'idle' | 'forming' | 'running' | 'dissolving';
 
@@ -218,29 +219,37 @@ const SessionEndModal: React.FC<SessionEndModalProps> = ({
     if (!isOpen) return null;
 
     return (
-        <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style={{ backgroundColor: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(8px)' }}
-            onClick={onCancel}
-        >
+        <FlowPortal>
             <div
-                className="relative w-full max-w-sm rounded-3xl p-6 animate-fade-in"
+                className="absolute left-0 right-0 bottom-0 z-50 flex items-center justify-center p-4"
                 style={{
-                    background: isValidSession
-                        ? 'rgba(240, 253, 250, 0.65)'  // Emerald tinted glass
-                        : 'rgba(255, 251, 235, 0.65)', // Amber tinted glass
-                    backdropFilter: 'blur(24px) saturate(160%)',
-                    WebkitBackdropFilter: 'blur(24px) saturate(160%)',
-                    border: isValidSession
-                        ? '1px solid rgba(52, 211, 153, 0.25)'
-                        : '1px solid rgba(251, 191, 36, 0.25)',
-                    boxShadow: `
-                        0 25px 70px -30px rgba(15, 23, 42, 0.35),
-                        inset 0 1px 2px rgba(255, 255, 255, 0.4)
-                    `,
+                    top: 'var(--titlebar-height)',
+                    backgroundColor: 'rgba(15, 23, 42, 0.4)',
+                    backdropFilter: 'blur(8px)',
+                    WebkitBackdropFilter: 'blur(8px)',
+                    borderBottomLeftRadius: 'var(--window-radius)',
+                    borderBottomRightRadius: 'var(--window-radius)',
                 }}
-                onClick={(e) => e.stopPropagation()}
+                onClick={onCancel}
             >
+                <div
+                    className="relative w-full max-w-sm rounded-3xl p-6 animate-fade-in"
+                    style={{
+                        background: isValidSession
+                            ? 'rgba(240, 253, 250, 0.65)'  // Emerald tinted glass
+                            : 'rgba(255, 251, 235, 0.65)', // Amber tinted glass
+                        backdropFilter: 'blur(24px) saturate(160%)',
+                        WebkitBackdropFilter: 'blur(24px) saturate(160%)',
+                        border: isValidSession
+                            ? '1px solid rgba(52, 211, 153, 0.25)'
+                            : '1px solid rgba(251, 191, 36, 0.25)',
+                        boxShadow: `
+                            0 25px 70px -30px rgba(15, 23, 42, 0.35),
+                            inset 0 1px 2px rgba(255, 255, 255, 0.4)
+                        `,
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                >
 
                 {/* Icon */}
                 <div className="flex justify-center mb-4">
@@ -327,8 +336,9 @@ const SessionEndModal: React.FC<SessionEndModalProps> = ({
                         {isValidSession ? t('timer.endModal.endAndSave') : t('timer.endModal.discard')}
                     </button>
                 </div>
+                </div>
             </div>
-        </div>
+        </FlowPortal>
     );
 };
 

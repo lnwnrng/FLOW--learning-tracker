@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Crown, Check, Sparkles } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { triggerFeedback } from '../services/feedbackService';
+import FlowPortal from './FlowPortal';
 
 interface PremiumSuccessModalProps {
     isOpen: boolean;
@@ -96,9 +97,14 @@ const PremiumSuccessModal: React.FC<PremiumSuccessModalProps> = ({
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        // Set canvas size
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        const resizeCanvas = () => {
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = Math.round(rect.width);
+            canvas.height = Math.round(rect.height);
+        };
+
+        // Set canvas size based on the modal viewport (below titlebar)
+        resizeCanvas();
 
         // Create initial bursts from both sides
         setTimeout(() => {
@@ -178,24 +184,24 @@ const PremiumSuccessModal: React.FC<PremiumSuccessModalProps> = ({
         animate();
 
         // Handle resize
-        const handleResize = () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        };
-        window.addEventListener('resize', handleResize);
+        window.addEventListener('resize', resizeCanvas);
 
         return () => {
             if (animationRef.current) {
                 cancelAnimationFrame(animationRef.current);
             }
-            window.removeEventListener('resize', handleResize);
+            window.removeEventListener('resize', resizeCanvas);
         };
     }, [isOpen]);
 
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center">
+        <FlowPortal>
+        <div
+            className="absolute left-0 right-0 bottom-0 z-[150] flex items-center justify-center"
+            style={{ top: 'var(--titlebar-height)' }}
+        >
             {/* Confetti Canvas */}
             <canvas
                 ref={canvasRef}
@@ -331,6 +337,7 @@ const PremiumSuccessModal: React.FC<PremiumSuccessModalProps> = ({
                 </button>
             </div>
         </div>
+        </FlowPortal>
     );
 };
 

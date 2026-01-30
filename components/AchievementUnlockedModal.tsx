@@ -4,6 +4,7 @@ import type { AchievementType } from '../types';
 import { useTranslation } from 'react-i18next';
 import { triggerFeedback } from '../services/feedbackService';
 import { achievementDisplay } from './achievementDisplay';
+import FlowPortal from './FlowPortal';
 
 interface AchievementUnlockedModalProps {
     isOpen: boolean;
@@ -86,8 +87,14 @@ const AchievementUnlockedModal: React.FC<AchievementUnlockedModalProps> = ({
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        const resizeCanvas = () => {
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = Math.round(rect.width);
+            canvas.height = Math.round(rect.height);
+        };
+
+        // Set canvas size based on the modal viewport (below titlebar)
+        resizeCanvas();
 
         setTimeout(() => {
             particlesRef.current = [
@@ -151,24 +158,24 @@ const AchievementUnlockedModal: React.FC<AchievementUnlockedModalProps> = ({
 
         animate();
 
-        const handleResize = () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        };
-        window.addEventListener('resize', handleResize);
+        window.addEventListener('resize', resizeCanvas);
 
         return () => {
             if (animationRef.current) {
                 cancelAnimationFrame(animationRef.current);
             }
-            window.removeEventListener('resize', handleResize);
+            window.removeEventListener('resize', resizeCanvas);
         };
     }, [isOpen]);
 
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[160] flex items-center justify-center">
+        <FlowPortal>
+        <div
+            className="absolute left-0 right-0 bottom-0 z-[160] flex items-center justify-center"
+            style={{ top: 'var(--titlebar-height)' }}
+        >
             <canvas
                 ref={canvasRef}
                 className="absolute inset-0 pointer-events-none"
@@ -299,6 +306,7 @@ const AchievementUnlockedModal: React.FC<AchievementUnlockedModalProps> = ({
                 </div>
             </div>
         </div>
+        </FlowPortal>
     );
 };
 

@@ -2,6 +2,7 @@ import React from 'react';
 import { LogOut, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { triggerFeedback } from '../services/feedbackService';
+import FlowPortal from './FlowPortal';
 
 interface SignOutModalProps {
     isOpen: boolean;
@@ -18,17 +19,19 @@ const SignOutModal: React.FC<SignOutModalProps> = ({
     if (!isOpen) return null;
 
     return (
-        <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 flow-backdrop-strong"
-            onClick={() => {
-                triggerFeedback('tap');
-                onCancel();
-            }}
-        >
+        <FlowPortal>
             <div
-                className="relative w-full max-w-sm rounded-3xl p-6 animate-fade-in flow-modal"
-                onClick={(e) => e.stopPropagation()}
+                className="absolute left-0 right-0 bottom-0 z-50 flex items-center justify-center p-4 flow-backdrop-strong"
+                style={{ top: 'var(--titlebar-height)' }}
+                onClick={() => {
+                    triggerFeedback('tap');
+                    onCancel();
+                }}
             >
+                <div
+                    className="relative w-full max-w-sm rounded-3xl p-6 animate-fade-in flow-modal"
+                    onClick={(e) => e.stopPropagation()}
+                >
                 <div className="absolute inset-0 pointer-events-none rounded-3xl overflow-hidden flow-modal-highlight" />
                 {/* Close button */}
                 <button
@@ -98,7 +101,8 @@ const SignOutModal: React.FC<SignOutModalProps> = ({
                     </button>
                 </div>
             </div>
-        </div>
+            </div>
+        </FlowPortal>
     );
 };
 

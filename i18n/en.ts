@@ -211,11 +211,12 @@ const en = {
       feedback: 'Send Feedback',
     },
     language: {
-      valueEn: 'English',
-      valueZh: '中文',
-      modalTitle: 'Language',
-      modalDesc: 'Select your preferred language.',
-    },
+    valueEn: 'English',
+    valueZh: '中文',
+    modalTitle: 'Language',
+    modalDesc: 'Select your preferred language.',
+    active: 'Active',
+  },
     privacy: {
       title: 'Privacy Policy',
       p1: 'Flow stores your data locally on your device by default. We do not upload your focus sessions, tasks, or settings unless you explicitly enable sync in a future update.',

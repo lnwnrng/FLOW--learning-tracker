@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { CheckCircle2, Info, AlertTriangle, XCircle, X } from 'lucide-react';
 import { triggerFeedback } from '../services/feedbackService';
+import FlowPortal from './FlowPortal';
 
 // Toast types
 export type ToastType = 'success' | 'info' | 'warning' | 'error';
@@ -220,16 +221,22 @@ const ToastContainer: React.FC<ToastContainerProps> = ({ toasts, onDismiss }) =>
     if (toasts.length === 0) return null;
 
     return (
-        <div
-            className="fixed top-4 left-1/2 -translate-x-1/2 z-[200] flex flex-col items-center pointer-events-none"
-            style={{ width: 'calc(100% - 32px)', maxWidth: '400px' }}
-        >
-            {toasts.map((toast) => (
-                <div key={toast.id} className="pointer-events-auto w-full">
-                    <ToastItem toast={toast} onDismiss={onDismiss} />
-                </div>
-            ))}
-        </div>
+        <FlowPortal>
+            <div
+                className="absolute left-1/2 -translate-x-1/2 z-[200] flex flex-col items-center pointer-events-none"
+                style={{
+                    top: 'calc(var(--titlebar-height) + 16px)',
+                    width: 'calc(100% - 32px)',
+                    maxWidth: '400px',
+                }}
+            >
+                {toasts.map((toast) => (
+                    <div key={toast.id} className="pointer-events-auto w-full">
+                        <ToastItem toast={toast} onDismiss={onDismiss} />
+                    </div>
+                ))}
+            </div>
+        </FlowPortal>
     );
 };
 

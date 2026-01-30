@@ -211,11 +211,12 @@ const zh = {
       feedback: '发送反馈',
     },
     language: {
-      valueEn: 'English',
-      valueZh: '中文',
-      modalTitle: '语言',
-      modalDesc: '选择你偏好的语言。',
-    },
+    valueEn: 'English',
+    valueZh: '中文',
+    modalTitle: '语言',
+    modalDesc: '选择你偏好的语言。',
+    active: '当前',
+  },
     privacy: {
       title: '隐私政策',
       p1: 'Flow 默认将你的数据存储在本机设备上。除非你在未来更新中明确开启同步，否则我们不会上传你的专注记录、任务或设置。',

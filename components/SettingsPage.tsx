@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import FlowPortal from './FlowPortal';
 import {
     ArrowLeft,
     Moon,
@@ -15,7 +16,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useSettingsStore } from '../stores';
-import { normalizeLanguage } from '../i18n';
+import { normalizeLanguage, SUPPORTED_LANGUAGES } from '../i18n';
 import { playSoundEffect, triggerHaptic, triggerFeedback } from '../services/feedbackService';
 
 interface SettingsPageProps {
@@ -157,9 +158,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 }) => {
     if (!isOpen) return null;
 
-    return (
+    const modal = (
         <div
-            className="fixed inset-0 z-[120] flex items-center justify-center p-4 flow-backdrop-strong"
+            className="absolute left-0 right-0 bottom-0 z-[120] flex items-center justify-center p-4 flow-backdrop-strong"
+            style={{
+                top: 'var(--titlebar-height)',
+                borderBottomLeftRadius: 'var(--window-radius)',
+                borderBottomRightRadius: 'var(--window-radius)',
+            }}
             onClick={() => {
                 triggerFeedback('tap');
                 onClose();
@@ -186,6 +192,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
         </div>
     );
+
+    // Avoid `position: fixed` inside transformed parents (e.g. `.animate-fade-in`).
+    // Portal to the window frame so the backdrop starts exactly below the titlebar.
+    return <FlowPortal>{modal}</FlowPortal>;
 };
 
 const SettingsPage: React.FC<SettingsPageProps> = ({ onBack }) => {
@@ -199,6 +209,15 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onBack }) => {
     const soundEnabled = settings['soundEffects'] !== 'off';
     const hapticEnabled = settings['hapticFeedback'] !== 'off';
     const [activeModal, setActiveModal] = useState<'language' | 'privacy' | 'support' | 'feedback' | null>(null);
+
+    const languageLabels: Record<string, string> = {
+        en: t('settings.language.valueEn'),
+        zh: t('settings.language.valueZh'),
+    };
+
+    const getLanguageLabel = (language: string) => {
+        return languageLabels[language] ?? language.toUpperCase();
+    };
 
     const handleSelectLanguage = (language: 'en' | 'zh') => {
         i18n.changeLanguage(language).catch(() => undefined);
@@ -328,27 +347,28 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onBack }) => {
             >
                 <div className="space-y-3">
                     <p>{t('settings.language.modalDesc')}</p>
-                    <div className="grid grid-cols-2 gap-2">
-                        <button
-                            onClick={() => handleSelectLanguage('en')}
-                            className={`rounded-2xl px-4 py-2 text-sm font-semibold transition-all border ${
-                                selectedLanguage === 'en'
-                                    ? 'bg-slate-900/90 text-white border-slate-900/80'
-                                    : 'bg-white/40 text-slate-600 border-white/50'
-                            }`}
-                        >
-                            {t('settings.language.valueEn')}
-                        </button>
-                        <button
-                            onClick={() => handleSelectLanguage('zh')}
-                            className={`rounded-2xl px-4 py-2 text-sm font-semibold transition-all border ${
-                                selectedLanguage === 'zh'
-                                    ? 'bg-slate-900/90 text-white border-slate-900/80'
-                                    : 'bg-white/40 text-slate-600 border-white/50'
-                            }`}
-                        >
-                            {t('settings.language.valueZh')}
-                        </button>
+                    <div className="max-h-[50vh] overflow-y-auto pr-1 space-y-2">
+                        {SUPPORTED_LANGUAGES.map((language) => {
+                            const isActive = selectedLanguage === language;
+                            return (
+                                <button
+                                    key={language}
+                                    onClick={() => handleSelectLanguage(language)}
+                                    className={`w-full rounded-2xl px-4 py-3 text-sm font-semibold transition-all border flex items-center justify-between ${
+                                        isActive
+                                            ? 'bg-slate-900/90 text-white border-slate-900/80'
+                                            : 'bg-white/40 text-slate-600 border-white/50 hover:bg-white/60'
+                                    }`}
+                                >
+                                    <span>{getLanguageLabel(language)}</span>
+                                    {isActive && (
+                                        <span className="text-xs uppercase tracking-[0.2em] text-white/70">
+                                            {t('settings.language.active')}
+                                        </span>
+                                    )}
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
             </SettingsModal>
